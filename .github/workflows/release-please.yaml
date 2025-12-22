@@ -28,7 +28,7 @@ jobs:
 
             -   name: Setup Gradle
                 if: ${{ steps.release.outputs.release_created }}
-                uses: gradle/actions/setup-gradle@v4
+                uses: gradle/actions/setup-gradle@v5
 
             -   name: Run chmod to make gradlew executable
                 if: ${{ steps.release.outputs.release_created }}
