@@ -28,8 +28,7 @@ public class Processor {
     private final ResourceRequest request;
     private final ProcessorOptions options;
 
-    @Nullable
-    private final ResponseConsumer responseConsumer;
+    @Nullable private final ResponseConsumer responseConsumer;
 
     private final OkHttpClient httpClient;
     private final Remapper remapper;
@@ -139,13 +138,11 @@ public class Processor {
         return true;
     }
 
-    @Nullable
-    private URL getJarUrl() {
+    @Nullable private URL getJarUrl() {
         return this.request.getJar().orElse(null);
     }
 
-    @Nullable
-    private URL getMappingsUrl() {
+    @Nullable private URL getMappingsUrl() {
         return this.request.getMappings().orElse(null);
     }
 
