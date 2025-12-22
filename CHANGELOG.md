@@ -1,5 +1,28 @@
 # Changelog
 
+## [2.8.0](https://github.com/TimSchoenle/McDeob/compare/v2.7.0...v2.8.0) (2025-12-22)
+
+
+### Features
+
+* add propper support for 26.X+ unobfuscated versions ([#109](https://github.com/TimSchoenle/McDeob/issues/109)) ([f3a29c2](https://github.com/TimSchoenle/McDeob/commit/f3a29c20815f295881624cf2ffa152385d15a6a2))
+
+
+### Bug Fixes
+
+* **deps:** update dagger to v2.57.2 ([#97](https://github.com/TimSchoenle/McDeob/issues/97)) ([2ec53c7](https://github.com/TimSchoenle/McDeob/commit/2ec53c7cb5bb9b25f5bde1a0f30f72905a6f1be4))
+* **deps:** update dependency com.fasterxml.jackson.core:jackson-databind to v2.20.0 ([#73](https://github.com/TimSchoenle/McDeob/issues/73)) ([8779861](https://github.com/TimSchoenle/McDeob/commit/87798619f7014f7a949bedb3c52680dbe9dc2ba7))
+* **deps:** update dependency com.fasterxml.jackson.datatype:jackson-datatype-jsr310 to v2.20.0 ([#92](https://github.com/TimSchoenle/McDeob/issues/92)) ([91b5072](https://github.com/TimSchoenle/McDeob/commit/91b5072ff05899927be79406658ce8169c6043e8))
+* **deps:** update dependency com.google.dagger:dagger to v2.57.1 ([#81](https://github.com/TimSchoenle/McDeob/issues/81)) ([3d51a1b](https://github.com/TimSchoenle/McDeob/commit/3d51a1b7169986573326d00b0a405d9b2446080f))
+* **deps:** update dependency com.google.dagger:dagger-compiler to v2.57.1 ([#82](https://github.com/TimSchoenle/McDeob/issues/82)) ([80c8049](https://github.com/TimSchoenle/McDeob/commit/80c8049d0bb02aeef425905abef47c56cd9cab44))
+* **deps:** update dependency com.squareup.okhttp3:okhttp to v5 ([#87](https://github.com/TimSchoenle/McDeob/issues/87)) ([a4370af](https://github.com/TimSchoenle/McDeob/commit/a4370af2206779e87c93450cabe68dcedf764107))
+* **deps:** update dependency com.squareup.okhttp3:okhttp to v5.3.2 ([#100](https://github.com/TimSchoenle/McDeob/issues/100)) ([8ea1270](https://github.com/TimSchoenle/McDeob/commit/8ea1270288fe515f76fa317d4b70b1f2b4815aaf))
+* **deps:** update dependency io.github.lxgaming:reconstruct-common to v1.3.27 ([#80](https://github.com/TimSchoenle/McDeob/issues/80)) ([f8e5da6](https://github.com/TimSchoenle/McDeob/commit/f8e5da6d0af7998f4c5b76526159939d892d8a75))
+* **deps:** update dependency org.slf4j:slf4j-simple to v2.0.17 ([#86](https://github.com/TimSchoenle/McDeob/issues/86)) ([6f23f72](https://github.com/TimSchoenle/McDeob/commit/6f23f720afeb408c712d62ad317613c41d414a8d))
+* **deps:** update dependency org.vineflower:vineflower to v1.11.1 ([#85](https://github.com/TimSchoenle/McDeob/issues/85)) ([40dd667](https://github.com/TimSchoenle/McDeob/commit/40dd66766ec6b09f9c333f9ae2cc3e4d2bf8caf4))
+* **deps:** update dependency org.vineflower:vineflower to v1.11.2 ([#104](https://github.com/TimSchoenle/McDeob/issues/104)) ([976a7a2](https://github.com/TimSchoenle/McDeob/commit/976a7a2488156b9e70e65e2c9cb9edaa17e26850))
+* **deps:** update jackson monorepo to v2.20.1 ([#102](https://github.com/TimSchoenle/McDeob/issues/102)) ([f7339af](https://github.com/TimSchoenle/McDeob/commit/f7339af002fc8881accafa5f6a47c11f64dbc2dd))
+
 ## [2.7.0](https://github.com/Timmi6790/McDeob/compare/2.6.0...v2.7.0) (2024-09-08)
 
 
