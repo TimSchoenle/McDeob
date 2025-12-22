@@ -5,7 +5,7 @@ plugins {
     java
     application
     id("io.freefair.lombok") version "8.14.3"
-    id("com.diffplug.spotless") version "7.2.1"
+    id("com.diffplug.spotless") version "8.1.0"
     id("com.gradleup.shadow") version "9.1.0"
     id("io.sentry.jvm.gradle") version "5.9.0"
 }
