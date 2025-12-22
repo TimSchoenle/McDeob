@@ -5,7 +5,7 @@ okhttp = "5.1.0"
 dagger = "2.57.1"
 mirror = "5.0.5"
 reconstruct = "1.3.27"
-vineflower = "1.11.1"
+vineflower = "1.11.2"
 joptSimple = "5.0.4"
 slf4j = "2.0.17"
 
