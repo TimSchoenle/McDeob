@@ -7,7 +7,7 @@ plugins {
     id("io.freefair.lombok") version "8.14.2"
     id("com.diffplug.spotless") version "7.2.1"
     id("com.gradleup.shadow") version "9.1.0"
-    id("io.sentry.jvm.gradle") version "5.9.0"
+    id("io.sentry.jvm.gradle") version "5.12.2"
 }
 
 group = "com.shanebeestudios"
