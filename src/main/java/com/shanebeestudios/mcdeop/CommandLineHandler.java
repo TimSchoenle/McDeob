@@ -101,7 +101,14 @@ public class CommandLineHandler {
                 .map(manifest -> new ResourceRequest(manifest, type))
                 .ifPresentOrElse(
                         request -> {
-                            final boolean remap = this.options.has("remap");
+                            boolean remap = this.options.has("remap");
+                            if (remap && request.getMappings().isEmpty()) {
+                                log.warn(
+                                        "Mappings are not available for version {}, skipping remapping.",
+                                        request.getVersion().id());
+                                remap = false;
+                            }
+
                             final boolean decompile = this.options.has("decompile");
                             final boolean zip = this.options.has("zip");
                             final ProcessorOptions processorOptions = ProcessorOptions.builder()

@@ -8,15 +8,20 @@ import com.shanebeestudios.mcdeop.app.components.VersionBox;
 import com.shanebeestudios.mcdeop.processor.Processor;
 import com.shanebeestudios.mcdeop.processor.ProcessorOptions;
 import com.shanebeestudios.mcdeop.processor.ResourceRequest;
+import de.timmi6790.launchermeta.data.release.ReleaseManifest;
 import de.timmi6790.launchermeta.data.version.Version;
 import java.awt.*;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import javax.inject.Inject;
 import javax.swing.*;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 import mx.kenzie.mirror.Mirror;
 
+@Slf4j
 @Getter
 public class App extends JFrame {
     private final VersionManager versionManager;
@@ -54,6 +59,19 @@ public class App extends JFrame {
 
         this.versionBox = new VersionBox(this.versionManager);
         this.processorOptionsGroup = new ProcessorOptionsGroup();
+
+        this.versionBox.addActionListener(e -> {
+            final Version version = (Version) this.versionBox.getSelectedItem();
+            if (version == null) {
+                return;
+            }
+            this.updateRemapVisibility(version);
+        });
+        // Set initial state
+        final Version selectedVersion = (Version) this.versionBox.getSelectedItem();
+        if (selectedVersion != null) {
+            this.updateRemapVisibility(selectedVersion);
+        }
 
         this.statusBox = new JTextField("Status!");
         this.statusBox.setEditable(false);
@@ -123,6 +141,22 @@ public class App extends JFrame {
 
     public void updateStatusBox(final String string) {
         this.statusBox.setText(string);
+    }
+
+    private void updateRemapVisibility(final Version version) {
+        this.processorOptionsGroup.setRemapVisible(this.versionManager.hasMappings(version));
+
+        CompletableFuture.runAsync(() -> {
+            try {
+                final ReleaseManifest manifest = this.versionManager.getReleaseManifest(version);
+                final boolean hasMappings =
+                        manifest.getDownloads().getServerMappings().isPresent()
+                                || manifest.getDownloads().getClientMappings().isPresent();
+                SwingUtilities.invokeLater(() -> this.processorOptionsGroup.setRemapVisible(hasMappings));
+            } catch (final IOException e) {
+                log.error("Failed to fetch release manifest for version {}", version.id(), e);
+            }
+        });
     }
 
     public void toggleControls() {

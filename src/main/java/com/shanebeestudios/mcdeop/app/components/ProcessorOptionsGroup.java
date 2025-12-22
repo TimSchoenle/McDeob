@@ -26,9 +26,14 @@ public class ProcessorOptionsGroup implements Serializable {
         this.zipDecompileOutput.setSelected(false);
     }
 
+    public void setRemapVisible(final boolean visible) {
+        this.remap.setVisible(visible);
+        this.remap.setSelected(visible);
+    }
+
     public ProcessorOptions getProcessorOptions() {
         return ProcessorOptions.builder()
-                .remap(this.remap.isSelected())
+                .remap(this.remap.isVisible() && this.remap.isSelected())
                 .decompile(this.decompile.isSelected())
                 .zipDecompileOutput(this.zipDecompileOutput.isSelected())
                 .build();
