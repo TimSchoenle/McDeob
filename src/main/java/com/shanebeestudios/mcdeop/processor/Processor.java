@@ -135,17 +135,6 @@ public class Processor {
             return false;
         }
 
-        if (this.getMappingsUrl() == null) {
-            log.error(
-                    "Failed to find mappings URL for version {}-{}",
-                    this.request.type(),
-                    this.request.getVersion().id());
-            this.sendNewResponse(String.format(
-                    "Failed to find mappings URL for version %s-%s",
-                    this.request.type(), this.request.getVersion().id()));
-            return false;
-        }
-
         return true;
     }
 
@@ -170,9 +159,14 @@ public class Processor {
     }
 
     private CompletableFuture<Void> downloadMappings() {
+        final URL mappingsUrl = this.getMappingsUrl();
+        if (mappingsUrl == null) {
+            return CompletableFuture.completedFuture(null);
+        }
+
         return CompletableFuture.supplyAsync(() -> {
             try {
-                this.downloadFile(this.getMappingsUrl(), this.mappingsPath, "mappings");
+                this.downloadFile(mappingsUrl, this.mappingsPath, "mappings");
             } catch (final IOException exception) {
                 throw new CompletionException(exception);
             }
@@ -226,15 +220,27 @@ public class Processor {
             this.sendNewResponse(String.format("Completed in %s!", duration));
         })) {
             // Download the JAR and mappings files
-            this.sendNewResponse("Downloading JAR & MAPPINGS...");
+            if (this.getMappingsUrl() != null) {
+                this.sendNewResponse("Downloading JAR & MAPPINGS...");
+            } else {
+                this.sendNewResponse("Downloading JAR...");
+            }
             CompletableFuture.allOf(this.downloadJar(), this.downloadMappings()).join();
 
+            boolean remapped = false;
             if (this.options.remap()) {
-                this.remapJar();
+                if (this.getMappingsUrl() != null) {
+                    this.remapJar();
+                    remapped = true;
+                } else {
+                    log.warn(
+                            "Remapping requested but no mappings found for version {}",
+                            this.request.getVersion().id());
+                }
             }
 
             if (this.options.decompile()) {
-                this.decompileJar(this.options.remap() ? this.remappedJar : this.jarPath);
+                this.decompileJar(remapped ? this.remappedJar : this.jarPath);
             }
 
         } catch (final IOException e) {
