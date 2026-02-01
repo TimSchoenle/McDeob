@@ -13,7 +13,7 @@ remapped/decompiled Minecraft code.
 
 ## Requirements
 
-- Java 21+
+- Java 25+
 
 ## Fork Notice
 

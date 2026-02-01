@@ -4,15 +4,15 @@ plugins {
     `java-library`
     java
     application
-    id("io.freefair.lombok") version "9.1.0"
-    id("com.diffplug.spotless") version "8.1.0"
-    id("com.gradleup.shadow") version "9.3.0"
+    id("io.freefair.lombok") version "9.2.0"
+    id("com.diffplug.spotless") version "8.2.1"
+    id("com.gradleup.shadow") version "9.3.1"
     id("io.sentry.jvm.gradle") version "5.12.2"
     id("org.openjfx.javafxplugin") version "0.1.0"
 }
 
 javafx {
-    version = "21.0.2"
+    version = "25"
     modules = listOf("javafx.controls", "javafx.graphics")
 }
 
@@ -61,7 +61,11 @@ allprojects {
         plugin("com.gradleup.shadow")
     }
 
-    java.sourceCompatibility = JavaVersion.VERSION_21
+    java {
+        toolchain {
+            languageVersion = JavaLanguageVersion.of(25)
+        }
+    }
 
     repositories {
         mavenCentral()
