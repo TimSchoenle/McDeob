@@ -1,9 +1,10 @@
 package com.shanebeestudios.mcdeop;
 
-import com.shanebeestudios.mcdeop.util.Util;
+import com.shanebeestudios.mcdeop.app.McDeobFxApp;
 import io.sentry.Sentry;
-import javax.swing.*;
+import javafx.application.Application;
 import lombok.extern.slf4j.Slf4j;
+import picocli.CommandLine;
 
 @Slf4j
 public class McDeob {
@@ -11,10 +12,14 @@ public class McDeob {
         Sentry.init(options ->
                 options.setDsn("https://a431c07b469cad98e4933270c602fb0d@o165625.ingest.sentry.io/4506099651444736"));
 
+        final VersionManager versionManager = DaggerMcDebobComponent.create().getVersionManager();
+
         if (args.length == 0) {
-            startGUI();
+            McDeobFxApp.setVersionManager(versionManager);
+            Application.launch(McDeobFxApp.class, args);
         } else {
-            new CommandLineHandler(DaggerMcDebobComponent.create().getVersionManager(), args).run();
+            final int exitCode = new CommandLine(new McDeobCommand(versionManager)).execute(args);
+            System.exit(exitCode);
         }
     }
 
@@ -27,24 +32,5 @@ public class McDeob {
         }
 
         return version;
-    }
-
-    private static void startGUI() {
-        try {
-            if (Util.isRunningMacOS()) {
-                System.setProperty("apple.awt.application.appearance", "system");
-            } else {
-                // makes the window prettier on other systems than macs
-                // swing's look and feel is ew
-                UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-            }
-        } catch (ClassNotFoundException
-                | InstantiationException
-                | IllegalAccessException
-                | UnsupportedLookAndFeelException e) {
-            throw new RuntimeException(e);
-        }
-
-        DaggerMcDebobComponent.create().getApp().create();
     }
 }

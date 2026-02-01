@@ -8,6 +8,12 @@ plugins {
     id("com.diffplug.spotless") version "8.1.0"
     id("com.gradleup.shadow") version "9.3.0"
     id("io.sentry.jvm.gradle") version "5.12.2"
+    id("org.openjfx.javafxplugin") version "0.1.0"
+}
+
+javafx {
+    version = "21.0.2"
+    modules = listOf("javafx.controls", "javafx.graphics")
 }
 
 group = "com.shanebeestudios"
@@ -32,12 +38,13 @@ dependencies {
     implementation(libs.mirror)
     implementation(libs.reconstruct.common)
     implementation(libs.vineflower)
-    implementation(libs.jopt.simple)
+    implementation(libs.picocli)
     implementation(libs.slf4j.simple)
     implementation(libs.okhttp)
 
     implementation(libs.dagger)
     annotationProcessor(libs.dagger.compiler)
+    annotationProcessor(libs.picocli.codegen)
 }
 
 tasks {
