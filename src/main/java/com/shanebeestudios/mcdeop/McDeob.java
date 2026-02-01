@@ -8,7 +8,7 @@ import picocli.CommandLine;
 
 @Slf4j
 public class McDeob {
-    public static void main(final String[] args) {
+    static void main(final String[] args) {
         Sentry.init(options ->
                 options.setDsn("https://a431c07b469cad98e4933270c602fb0d@o165625.ingest.sentry.io/4506099651444736"));
 
