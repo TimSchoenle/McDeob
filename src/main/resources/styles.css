@@ -1,0 +1,107 @@
+.root {
+    -fx-background-color: #2b2b2b;
+    -fx-font-family: "Segoe UI", sans-serif;
+    -fx-font-size: 14px;
+    -fx-text-fill: #a9b7c6;
+}
+
+.label {
+    -fx-text-fill: #a9b7c6;
+}
+
+.title-label {
+    -fx-font-size: 18px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #ffffff;
+    -fx-padding: 0 0 10 0;
+}
+
+.button {
+    -fx-background-color: #3c3f41;
+    -fx-text-fill: #a9b7c6;
+    -fx-border-color: #646464;
+    -fx-border-radius: 3;
+    -fx-background-radius: 3;
+    -fx-cursor: hand;
+}
+
+.button:hover {
+    -fx-background-color: #4b4e50;
+}
+
+.button:pressed {
+    -fx-background-color: #3c3f41;
+}
+
+.start-button {
+    -fx-background-color: #4a90e2;
+    -fx-text-fill: white;
+    -fx-border-color: #357abd;
+}
+
+.start-button:hover {
+    -fx-background-color: #5aa0f2;
+}
+
+.start-button:pressed {
+    -fx-background-color: #357abd;
+}
+
+.check-box {
+    -fx-text-fill: #a9b7c6;
+    -fx-cursor: hand;
+}
+
+.check-box .box {
+    -fx-background-color: #3c3f41;
+    -fx-border-color: #646464;
+    -fx-border-radius: 3;
+}
+
+.check-box:selected .mark {
+    -fx-background-color: #a9b7c6;
+}
+
+.radio-button {
+    -fx-text-fill: #a9b7c6;
+    -fx-cursor: hand;
+}
+
+.radio-button .radio {
+    -fx-background-color: #3c3f41;
+    -fx-border-color: #646464;
+}
+
+.radio-button:selected .dot {
+    -fx-background-color: #a9b7c6;
+}
+
+.combo-box {
+    -fx-background-color: #3c3f41;
+    -fx-border-color: #646464;
+    -fx-border-radius: 3;
+}
+
+.combo-box .cell {
+    -fx-text-fill: #a9b7c6; 
+}
+
+.combo-box .list-cell {
+    -fx-background-color: #3c3f41;
+    -fx-text-fill: #a9b7c6;
+}
+
+.combo-box .list-cell:hover {
+    -fx-background-color: #4b4e50;
+}
+
+.text-field {
+    -fx-background-color: #3c3f41;
+    -fx-text-fill: #a9b7c6;
+    -fx-border-color: #646464;
+    -fx-border-radius: 3;
+}
+
+.status-box {
+    -fx-font-weight: bold;
+}
