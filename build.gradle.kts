@@ -76,16 +76,16 @@ allprojects {
 
     spotless {
         java {
-            // Use the default importOrder configuration
+            targetExclude(layout.buildDirectory.asFileTree.matching { include("generated/**/*.java") })
+
             importOrder()
             removeUnusedImports()
 
-            // Cleanthat will refactor your code, but it may break your style: apply it before your formatter
             cleanthat()
 
             palantirJavaFormat()
 
-            formatAnnotations() // fixes formatting of type annotations
+            formatAnnotations()
         }
 
         kotlinGradle {
