@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.9.2](https://github.com/TimSchoenle/McDeob/compare/v2.9.1...v2.9.2) (2026-02-15)
+
+
+### Bug Fixes
+
+* release artifact upload the second ([2c384da](https://github.com/TimSchoenle/McDeob/commit/2c384da8aef1a750cd9ab6f4ff85ef2a893be1d7))
+
 ## [2.9.1](https://github.com/TimSchoenle/McDeob/compare/v2.9.0...v2.9.1) (2026-02-15)
 
 
