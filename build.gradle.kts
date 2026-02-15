@@ -121,6 +121,6 @@ buildConfig {
     packageName("com.shanebeestudios.mcdeop.util")
 
     useJavaOutput()
-    
+
     buildConfigField("VERSION", provider { version.toString() })
 }

@@ -1,6 +1,5 @@
 package com.shanebeestudios.mcdeop.app;
 
-import com.shanebeestudios.mcdeop.McDeob;
 import com.shanebeestudios.mcdeop.VersionManager;
 import com.shanebeestudios.mcdeop.app.components.*;
 import com.shanebeestudios.mcdeop.processor.Processor;
