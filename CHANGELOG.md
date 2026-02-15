@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.9.1](https://github.com/TimSchoenle/McDeob/compare/v2.9.0...v2.9.1) (2026-02-15)
+
+
+### Bug Fixes
+
+* release artifact upload condition ([f98dd13](https://github.com/TimSchoenle/McDeob/commit/f98dd1312acce15a5992217f3475add8b1bcc4e0))
+
 ## [2.9.0](https://github.com/TimSchoenle/McDeob/compare/v2.8.0...v2.9.0) (2026-02-15)
 
 
