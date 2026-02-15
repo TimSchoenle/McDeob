@@ -1,5 +1,24 @@
 # Changelog
 
+## [2.9.0](https://github.com/TimSchoenle/McDeob/compare/v2.8.0...v2.9.0) (2026-02-15)
+
+
+### Features
+
+* migrate to java 25  ([#119](https://github.com/TimSchoenle/McDeob/issues/119)) ([23902fb](https://github.com/TimSchoenle/McDeob/commit/23902fb973f2c49faca82f45dcfa5d5080bf4f96))
+
+
+### Bug Fixes
+
+* **deps:** update dagger to v2.59.1 ([#114](https://github.com/TimSchoenle/McDeob/issues/114)) ([c03e9ae](https://github.com/TimSchoenle/McDeob/commit/c03e9ae1537f4f69a052d8bf2438999d8ba4df54))
+* **deps:** update jackson monorepo to v2.21.0 ([#115](https://github.com/TimSchoenle/McDeob/issues/115)) ([ed6f408](https://github.com/TimSchoenle/McDeob/commit/ed6f4080f9671954d89d038bbd4ac197dcbccafe))
+* **deps:** update picocli to v4.7.7 ([#118](https://github.com/TimSchoenle/McDeob/issues/118)) ([cc184af](https://github.com/TimSchoenle/McDeob/commit/cc184af341878ea1feb7a51277e2743556d2881b))
+
+
+### Code Refactoring
+
+* migrate UI to javaFX and commandline to picocli  ([#117](https://github.com/TimSchoenle/McDeob/issues/117)) ([41ec4c2](https://github.com/TimSchoenle/McDeob/commit/41ec4c2e120c23792845b5f9d097ae948f80d955))
+
 ## [2.8.0](https://github.com/TimSchoenle/McDeob/compare/v2.7.0...v2.8.0) (2025-12-22)
 
 
