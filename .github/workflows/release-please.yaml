@@ -72,4 +72,5 @@ jobs:
                     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
                     RELEASE_TAG: ${{ needs.release-please.outputs.tag_name }}
                 run: |
-                    gh release upload $RELEASE_TAG 'build/libs/McDeob-*-all.jar#McDeob.jar'
+                    JAR_PATH=$(ls build/libs/McDeob-*-all.jar)
+                    gh release upload $RELEASE_TAG "$JAR_PATH#McDeob.jar"
