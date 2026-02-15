@@ -4,11 +4,11 @@ plugins {
     `java-library`
     java
     application
-    id("io.freefair.lombok") version "9.2.0"
-    id("com.diffplug.spotless") version "8.2.1"
-    id("com.gradleup.shadow") version "9.3.1"
-    id("io.sentry.jvm.gradle") version "6.0.0"
-    id("org.openjfx.javafxplugin") version "0.1.0"
+    alias(libs.plugins.lombok)
+    alias(libs.plugins.spotless)
+    alias(libs.plugins.shadow)
+    alias(libs.plugins.sentry)
+    alias(libs.plugins.javafxplugin)
 }
 
 javafx {
