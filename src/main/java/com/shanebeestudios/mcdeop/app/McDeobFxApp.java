@@ -1,10 +1,10 @@
 package com.shanebeestudios.mcdeop.app;
 
-import com.shanebeestudios.mcdeop.McDeob;
 import com.shanebeestudios.mcdeop.VersionManager;
 import com.shanebeestudios.mcdeop.app.components.*;
 import com.shanebeestudios.mcdeop.processor.Processor;
 import com.shanebeestudios.mcdeop.processor.ResourceRequest;
+import com.shanebeestudios.mcdeop.util.GeneratedConstant;
 import de.timmi6790.launchermeta.data.release.ReleaseManifest;
 import de.timmi6790.launchermeta.data.version.Version;
 import java.io.InputStream;
@@ -41,7 +41,7 @@ public class McDeobFxApp extends Application {
             return;
         }
 
-        stage.setTitle("McDeob - " + McDeob.getVersion());
+        stage.setTitle("McDeob - " + GeneratedConstant.VERSION);
         this.setIcons(stage);
 
         final VBox root = new VBox(15);

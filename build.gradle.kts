@@ -4,11 +4,12 @@ plugins {
     `java-library`
     java
     application
-    id("io.freefair.lombok") version "9.2.0"
-    id("com.diffplug.spotless") version "8.2.1"
-    id("com.gradleup.shadow") version "9.3.1"
-    id("io.sentry.jvm.gradle") version "6.0.0"
-    id("org.openjfx.javafxplugin") version "0.1.0"
+    alias(libs.plugins.lombok)
+    alias(libs.plugins.spotless)
+    alias(libs.plugins.shadow)
+    alias(libs.plugins.sentry)
+    alias(libs.plugins.javafxplugin)
+    alias(libs.plugins.buildconfig)
 }
 
 javafx {
@@ -75,16 +76,16 @@ allprojects {
 
     spotless {
         java {
-            // Use the default importOrder configuration
+            targetExclude(layout.buildDirectory.asFileTree.matching { include("generated/**/*.java") })
+
             importOrder()
             removeUnusedImports()
 
-            // Cleanthat will refactor your code, but it may break your style: apply it before your formatter
             cleanthat()
 
             palantirJavaFormat()
 
-            formatAnnotations() // fixes formatting of type annotations
+            formatAnnotations()
         }
 
         kotlinGradle {
@@ -113,4 +114,13 @@ allprojects {
             // dependsOn("distTar", "distZip")
         }
     }
+}
+
+buildConfig {
+    className("GeneratedConstant")
+    packageName("com.shanebeestudios.mcdeop.util")
+
+    useJavaOutput()
+
+    buildConfigField("VERSION", provider { version.toString() })
 }

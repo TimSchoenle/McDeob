@@ -9,6 +9,14 @@ vineflower = "1.11.2"
 slf4j = "2.0.17"
 picocli = "4.7.7"
 
+# plugins
+lombok = "9.2.0"
+spotless = "8.2.1"
+shadow = "9.3.1"
+sentry = "6.0.0"
+javafxplugin = "0.1.0"
+buildconfig = "6.0.7"
+
 [libraries]
 jackson-databind = { module = "com.fasterxml.jackson.core:jackson-databind", version.ref = "jacksonDatabind" }
 jackson-datatype-jsr310 = { module = "com.fasterxml.jackson.datatype:jackson-datatype-jsr310", version.ref = "jacksonJsr310" }
@@ -21,3 +29,11 @@ vineflower = { module = "org.vineflower:vineflower", version.ref = "vineflower" 
 slf4j-simple = { module = "org.slf4j:slf4j-simple", version.ref = "slf4j" }
 picocli = { module = "info.picocli:picocli", version.ref = "picocli" }
 picocli-codegen = { module = "info.picocli:picocli-codegen", version.ref = "picocli" }
+
+[plugins]
+lombok = { id = "io.freefair.lombok", version.ref = "lombok" }
+spotless = { id = "com.diffplug.spotless", version.ref = "spotless" }
+shadow = { id = "com.gradleup.shadow", version.ref = "shadow" }
+sentry = { id = "io.sentry.jvm.gradle", version.ref = "sentry" }
+javafxplugin = { id = "org.openjfx.javafxplugin", version.ref = "javafxplugin" }
+buildconfig = { id = "com.github.gmazzo.buildconfig", version.ref = "buildconfig" }

@@ -22,15 +22,4 @@ public class McDeob {
             System.exit(exitCode);
         }
     }
-
-    public static String getVersion() {
-        String version = McDeob.class.getPackage().getImplementationVersion();
-
-        // The version is not available when running in an IDE
-        if (version == null) {
-            version = "0.0.0";
-        }
-
-        return version;
-    }
 }
