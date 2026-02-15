@@ -1,0 +1,18 @@
+name: Update Files
+
+on:
+    pull_request:
+        branches: [ master ]
+
+permissions: { }
+
+jobs:
+    auto-format:
+        name: Auto-Format
+        if: needs.update-readme.outputs.changes_detected == 'false'
+        uses: TimSchoenle/actions/.github/workflows/java-gradle-auto-spotless.yaml@21446119ba35b38528e214f6d7a452fe54713e1d # workflows-java-gradle-auto-spotless-v1.0.3
+        with:
+            java_version: '25'
+        secrets:
+            bot_app_id: ${{ secrets.ACTIONS_MAINTENANCE_APP_ID }}
+            bot_private_key: ${{ secrets.ACTIONS_MAINTENANCE_PRIVATE_KEY }}

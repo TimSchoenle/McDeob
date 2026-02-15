@@ -2,32 +2,38 @@ name: Build
 
 on:
     push:
-        branches: '**'
+        branches: [ 'master' ]
     pull_request:
-        branches: '**'
+        branches: [ '**' ]
+
+concurrency:
+    group: ${{ github.workflow }}-${{ github.ref }}
+    cancel-in-progress: true
+
+permissions: { }
 
 jobs:
     build:
+        name: Build(Without Test)
         runs-on: ubuntu-latest
-
+        permissions:
+            contents: read # to read code
         steps:
-            -   name: Checkout source
-                uses: actions/checkout@v6
-
-            -   name: Set up JDK
-                uses: actions/setup-java@v5
+            -   name: Harden Runner
+                uses: step-security/harden-runner@5ef0c079ce82195b2a36a210272d6b661572d83e # v2.14.2
                 with:
-                    java-version: "25"
-                    distribution: "temurin"
+                    egress-policy: audit
 
-            -   name: Setup Gradle
-                uses: gradle/actions/setup-gradle@v5
+            -   name: Checkout
+                uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+                with:
+                    persist-credentials: false
 
-            -   name: Run chmod to make gradlew executable
-                run: chmod +x ./gradlew
+            -   name: Setup Base Environment
+                uses: ./.github/actions/setup-base-environment
 
-            -   name: Build with Gradle
-                run: ./gradlew build
+            -   name: Build without test
+                run: ./gradlew build -x test
 
             -   name: Upload a Build Artifact
                 uses: actions/upload-artifact@v6.0.0
@@ -37,3 +43,37 @@ jobs:
                     # A file, directory or wildcard pattern that describes what to upload
                     path: |
                         build/libs/McDeob-*-all.jar
+
+    test:
+        name: Test
+        needs: [ build ]
+        strategy:
+            matrix:
+                os: [ ubuntu-latest, windows-latest, macos-latest ]
+        runs-on: ${{ matrix.os }}
+        permissions:
+            contents: write # to write junit reports
+            checks: write # to write junit reports
+            id-token: write # to write junit reports
+        steps:
+            -   name: Harden Runner
+                uses: step-security/harden-runner@5ef0c079ce82195b2a36a210272d6b661572d83e # v2.14.2
+                with:
+                    egress-policy: audit
+
+            -   name: Checkout
+                uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+                with:
+                    persist-credentials: false
+
+            -   name: Setup Base Environment
+                uses: ./.github/actions/setup-base-environment
+
+            -   name: Test
+                run: ./gradlew test
+
+            -   name: Publish Test Report
+                uses: mikepenz/action-junit-report@74626db7353a25a20a72816467ebf035f674c5f8 # v6
+                if: success() || failure()
+                with:
+                    report_paths: '**/build/test-results/test/TEST-*.xml'

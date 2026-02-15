@@ -1,46 +1,76 @@
 name: release-please
+
 on:
     push:
         branches:
             - master
 
-permissions:
-    contents: write
-    pull-requests: write
+concurrency:
+    group: ${{ github.workflow }}-${{ github.ref }}
+    cancel-in-progress: false
+
+permissions: { }
 
 jobs:
     release-please:
+        name: Release Please
         runs-on: ubuntu-latest
+        outputs:
+            release_created: ${{ steps.release.outputs.release_created }}
+            tag_name: ${{ steps.release.outputs.tag_name }}
+        permissions:
+            contents: write # to create release tags/commits
+            issues: write # to comment on release issues
+            pull-requests: write # to create release PRs
         steps:
-            -   uses: googleapis/release-please-action@v4
-                id: release
-            -   uses: actions/checkout@v6
-                # these if statements ensure that a publication only occurs when
-                # a new release is created:
-                if: ${{ steps.release.outputs.release_created }}
-            # Build jar
-            -   name: Set up JDK 21
-                if: ${{ steps.release.outputs.release_created }}
-                uses: actions/setup-java@v5
+            -   name: Harden Runner
+                uses: step-security/harden-runner@5ef0c079ce82195b2a36a210272d6b661572d83e # v2.14.2
                 with:
-                    java-version: "25"
-                    distribution: "temurin"
+                    egress-policy: audit
 
-            -   name: Setup Gradle
-                if: ${{ steps.release.outputs.release_created }}
-                uses: gradle/actions/setup-gradle@v5
+            -   name: Generate Bot Token
+                id: generate_token
+                uses: actions/create-github-app-token@29824e69f54612133e76f7eaac726eef6c875baf # v2.2.1
+                with:
+                    app-id: ${{ secrets.RELEASE_BOT_APP_ID }}
+                    private-key: ${{ secrets.RELEASE_BOT_PRIVATE_KEY }}
 
-            -   name: Run chmod to make gradlew executable
-                if: ${{ steps.release.outputs.release_created }}
-                run: chmod +x ./gradlew
+            -   name: Run release-please
+                id: release
+                uses: googleapis/release-please-action@16a9c90856f42705d54a6fda1823352bdc62cf38 # v4
+                with:
+                    token: ${{ steps.generate_token.outputs.token }}
+
+    artifacts:
+        name: Release Artifacts
+        needs: release-please
+        runs-on: ubuntu-latest
+        if: ${{ needs.release-please.outputs.release_created }}
+        permissions:
+            contents: write # to release artifacts
+        steps:
+            -   name: Harden Runner
+                uses: step-security/harden-runner@5ef0c079ce82195b2a36a210272d6b661572d83e # v2.14.2
+                with:
+                    egress-policy: audit
+
+            -   name: Checkout
+                uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+                with:
+                    persist-credentials: false
+
+            -   name: Setup Base Environment
+                uses: ./.github/actions/setup-base-environment
 
             -   name: Build with Gradle
-                if: ${{ steps.release.outputs.release_created }}
+                shell: bash
                 run: ./gradlew build
 
             -   name: Upload Release Artifact
                 if: ${{ steps.release.outputs.release_created }}
+                shell: bash
                 env:
                     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+                    RELEASE_TAG: ${{ needs.release-please.outputs.tag_name }}
                 run: |
-                    gh release upload ${{ steps.release.outputs.tag_name }} build/libs/McDeob-*-all.jar
+                    gh release upload $RELEASE_TAG 'build/libs/McDeob-*-all.jar#McDeob.jar'
