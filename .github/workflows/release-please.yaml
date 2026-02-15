@@ -67,7 +67,6 @@ jobs:
                 run: ./gradlew build
 
             -   name: Upload Release Artifact
-                if: ${{ steps.release.outputs.release_created }}
                 shell: bash
                 env:
                     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
