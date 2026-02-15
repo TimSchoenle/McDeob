@@ -9,6 +9,7 @@ plugins {
     alias(libs.plugins.shadow)
     alias(libs.plugins.sentry)
     alias(libs.plugins.javafxplugin)
+    alias(libs.plugins.buildconfig)
 }
 
 javafx {
@@ -113,4 +114,13 @@ allprojects {
             // dependsOn("distTar", "distZip")
         }
     }
+}
+
+buildConfig {
+    className("GeneratedConstant")
+    packageName("com.shanebeestudios.mcdeop.util")
+
+    useJavaOutput()
+    
+    buildConfigField("VERSION", provider { version.toString() })
 }

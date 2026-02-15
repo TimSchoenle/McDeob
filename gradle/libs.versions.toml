@@ -15,6 +15,7 @@ spotless = "8.2.1"
 shadow = "9.3.1"
 sentry = "6.0.0"
 javafxplugin = "0.1.0"
+buildconfig = "6.0.7"
 
 [libraries]
 jackson-databind = { module = "com.fasterxml.jackson.core:jackson-databind", version.ref = "jacksonDatabind" }
@@ -35,3 +36,4 @@ spotless = { id = "com.diffplug.spotless", version.ref = "spotless" }
 shadow = { id = "com.gradleup.shadow", version.ref = "shadow" }
 sentry = { id = "io.sentry.jvm.gradle", version.ref = "sentry" }
 javafxplugin = { id = "org.openjfx.javafxplugin", version.ref = "javafxplugin" }
+buildconfig = { id = "com.github.gmazzo.buildconfig", version.ref = "buildconfig" }
