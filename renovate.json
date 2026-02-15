@@ -1,11 +1,6 @@
 {
     "$schema": "https://docs.renovatebot.com/renovate-schema.json",
     "extends": [
-        "config:recommended",
-        ":disableRateLimiting"
-    ],
-    "assigneesFromCodeOwners": true,
-    "labels": [
-        "dependencies"
+        "github>TimSchoenle/actions//configs/renovate/default"
     ]
 }
