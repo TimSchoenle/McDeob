@@ -1,6 +1,6 @@
 [versions]
-jacksonDatabind = "2.21.0"
-jacksonJsr310 = "2.21.0"
+jacksonDatabind = "2.21.1"
+jacksonJsr310 = "2.21.1"
 okhttp = "5.3.2"
 dagger = "2.59.2"
 mirror = "5.0.5"
