@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.9.3](https://github.com/TimSchoenle/McDeob/compare/v2.9.2...v2.9.3) (2026-02-27)
+
+
+### Bug Fixes
+
+* **deps:** update dagger to v2.59.2 ([#128](https://github.com/TimSchoenle/McDeob/issues/128)) ([f66f765](https://github.com/TimSchoenle/McDeob/commit/f66f7653d166296d0fbb10393de02da36e3e0426))
+* **deps:** update jackson monorepo to v2.21.1 ([#130](https://github.com/TimSchoenle/McDeob/issues/130)) ([cd353c3](https://github.com/TimSchoenle/McDeob/commit/cd353c31a09969ffdcff70dc04b20488501e959c))
+
 ## [2.9.2](https://github.com/TimSchoenle/McDeob/compare/v2.9.1...v2.9.2) (2026-02-15)
 
 
