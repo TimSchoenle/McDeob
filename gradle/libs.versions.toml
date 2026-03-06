@@ -15,7 +15,7 @@ spotless = "8.3.0"
 shadow = "9.3.2"
 sentry = "6.1.0"
 javafxplugin = "0.1.0"
-buildconfig = "6.0.8"
+buildconfig = "6.0.9"
 
 [libraries]
 jackson-databind = { module = "com.fasterxml.jackson.core:jackson-databind", version.ref = "jacksonDatabind" }
