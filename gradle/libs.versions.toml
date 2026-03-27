@@ -12,7 +12,7 @@ picocli = "4.7.7"
 # plugins
 lombok = "9.2.0"
 spotless = "8.4.0"
-shadow = "9.4.0"
+shadow = "9.4.1"
 sentry = "6.3.0"
 javafxplugin = "0.1.0"
 buildconfig = "6.0.9"
