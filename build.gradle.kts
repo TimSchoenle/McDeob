@@ -19,7 +19,7 @@ javafx {
 
 group = "com.shanebeestudios"
 // x-release-please-start-version
-version = "2.9.3"
+version = "2.9.4"
 // x-release-please-end
 description = "McDeob"
 

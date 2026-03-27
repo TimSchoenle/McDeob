@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.9.4](https://github.com/TimSchoenle/McDeob/compare/v2.9.3...v2.9.4) (2026-03-27)
+
+
+### Bug Fixes
+
+* **deps:** update jackson monorepo to v2.21.2 ([#157](https://github.com/TimSchoenle/McDeob/issues/157)) ([54504f7](https://github.com/TimSchoenle/McDeob/commit/54504f74cfb0ee7501e54a8a7fbaccaab2097578))
+
 ## [2.9.3](https://github.com/TimSchoenle/McDeob/compare/v2.9.2...v2.9.3) (2026-02-27)
 
 
