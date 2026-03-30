@@ -119,48 +119,40 @@ jobs:
                 shell: bash
                 run: chmod +x ./gradlew
 
-            -   name: Native compile
+            -   name: Native link
                 shell: bash
-                run: ./gradlew nativeCompile --stacktrace
+                run: ./gradlew nativeLink --stacktrace
 
             -   name: Stop Gradle daemons
                 shell: bash
                 run: ./gradlew --stop || true
 
-            -   name: Stage native artifacts (Windows)
+            -   name: Stage native executable (Windows)
                 if: runner.os == 'Windows'
                 shell: pwsh
                 run: |
-                    $dest = Join-Path $env:RUNNER_TEMP "native-artifacts"
-                    if (Test-Path $dest) { Remove-Item -Recurse -Force $dest }
-                    New-Item -ItemType Directory -Path $dest | Out-Null
-                    # Copy out of build dir to avoid EBUSY locks while upload-artifact zips files.
-                    robocopy "build\gluonfx" $dest /E /R:5 /W:2 /NFL /NDL /NJH /NJS /NC /NS
-                    $code = $LASTEXITCODE
-                    if ($code -gt 7) { exit $code }
-                    exit 0
+                    $exe = Get-ChildItem -Path "build\gluonfx" -Recurse -File -Filter *.exe |
+                        Sort-Object Length -Descending |
+                        Select-Object -First 1
+                    if ($null -eq $exe) {
+                        throw "Could not find native .exe output under build/gluonfx"
+                    }
+                    $dest = Join-Path $env:RUNNER_TEMP "mcdeob-native-${{ matrix.os }}.exe"
+                    Copy-Item -Path $exe.FullName -Destination $dest -Force
 
-            -   name: Stage native artifacts (Linux/macOS)
+            -   name: Stage native executable (Linux/macOS)
                 if: runner.os != 'Windows'
                 shell: bash
                 run: |
-                    rm -rf "$RUNNER_TEMP/native-artifacts"
-                    mkdir -p "$RUNNER_TEMP/native-artifacts"
-                    cp -R build/gluonfx/. "$RUNNER_TEMP/native-artifacts/"
-
-            -   name: Bundle native artifacts (Windows)
-                if: runner.os == 'Windows'
-                shell: pwsh
-                run: |
-                    $archive = Join-Path $env:RUNNER_TEMP "mcdeob-native-${{ matrix.os }}.zip"
-                    if (Test-Path $archive) { Remove-Item -Force $archive }
-                    Compress-Archive -Path (Join-Path $env:RUNNER_TEMP "native-artifacts\*") -DestinationPath $archive -Force
-
-            -   name: Bundle native artifacts (Linux/macOS)
-                if: runner.os != 'Windows'
-                shell: bash
-                run: |
-                    tar -C "$RUNNER_TEMP/native-artifacts" -czf "$RUNNER_TEMP/mcdeob-native-${{ matrix.os }}.tar.gz" .
+                    candidate="$(find build/gluonfx -type f \( -name 'McDeob' -o -name 'mcdeob' \) | head -n 1)"
+                    if [ -z "$candidate" ]; then
+                      candidate="$(find build/gluonfx -type f -perm -111 | head -n 1)"
+                    fi
+                    if [ -z "$candidate" ]; then
+                      echo "Could not find native executable under build/gluonfx"
+                      exit 1
+                    fi
+                    cp "$candidate" "$RUNNER_TEMP/mcdeob-native-${{ matrix.os }}"
 
             -   name: Upload Native Artifact
                 uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
@@ -168,4 +160,4 @@ jobs:
                 with:
                     name: McDeob-Native-${{ matrix.os }}
                     path: |
-                        ${{ runner.temp }}/mcdeob-native-${{ matrix.os }}.*
+                        ${{ runner.temp }}/mcdeob-native-${{ matrix.os }}*
