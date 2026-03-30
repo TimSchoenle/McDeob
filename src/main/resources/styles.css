@@ -105,3 +105,21 @@
 .status-box {
     -fx-font-weight: bold;
 }
+
+.logs-label {
+    -fx-font-weight: bold;
+}
+
+.logs-window {
+    -fx-font-family: "Consolas";
+    -fx-font-size: 12px;
+    -fx-text-fill: #f5f8ff;
+}
+
+.logs-window .content {
+    -fx-background-color: #202325;
+}
+
+.logs-window .text {
+    -fx-fill: #f5f8ff;
+}

@@ -17,6 +17,7 @@ import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.image.Image;
+import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import lombok.Setter;
@@ -31,6 +32,7 @@ public class McDeobFxApp extends Application {
     private McDeobVersionSelection versionSelection;
     private McDeobOptionsPanel optionsPanel;
     private McDeobStatusBox statusBox;
+    private McDeobLogWindow logWindow;
     private Button startButton;
 
     @Override
@@ -46,7 +48,7 @@ public class McDeobFxApp extends Application {
 
         final VBox root = new VBox(15);
         root.setPadding(new Insets(20));
-        root.setAlignment(Pos.CENTER);
+        root.setAlignment(Pos.TOP_CENTER);
         root.getStyleClass().add("main-panel");
 
         final McDeobTitle title = new McDeobTitle();
@@ -64,6 +66,8 @@ public class McDeobFxApp extends Application {
         });
 
         this.statusBox = new McDeobStatusBox();
+        this.logWindow = new McDeobLogWindow();
+        VBox.setVgrow(this.logWindow, Priority.ALWAYS);
 
         this.startButton = new Button("Start!");
         this.startButton.getStyleClass().add("start-button");
@@ -77,6 +81,7 @@ public class McDeobFxApp extends Application {
                         this.versionSelection,
                         this.optionsPanel,
                         this.statusBox,
+                        this.logWindow,
                         this.startButton);
 
         // Initial check for the already selected version (from constructor)
@@ -85,7 +90,7 @@ public class McDeobFxApp extends Application {
             this.updateRemapVisibility(current);
         }
 
-        final Scene scene = new Scene(root, 500, 350);
+        final Scene scene = new Scene(root, 650, 520);
         try {
             scene.getStylesheets()
                     .add(Objects.requireNonNull(this.getClass().getResource("/styles.css"))
@@ -96,6 +101,13 @@ public class McDeobFxApp extends Application {
 
         stage.setScene(scene);
         stage.show();
+    }
+
+    @Override
+    public void stop() {
+        if (this.logWindow != null) {
+            this.logWindow.dispose();
+        }
     }
 
     private void setIcons(final Stage stage) {
