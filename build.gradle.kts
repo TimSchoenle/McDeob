@@ -60,9 +60,11 @@ tasks {
 
 gluonfx {
     target = "host"
-    compilerArgs = listOf(
-        "--enable-url-protocols=https",
-        "-H:+ReportExceptionStackTraces")
+    compilerArgs =
+        listOf(
+            "--enable-url-protocols=https",
+            "-H:+ReportExceptionStackTraces",
+        )
 }
 
 allprojects {
