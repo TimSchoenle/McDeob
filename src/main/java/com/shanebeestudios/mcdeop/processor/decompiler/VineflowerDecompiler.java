@@ -12,6 +12,7 @@ public class VineflowerDecompiler implements Decompiler {
             "-tcs=1", // Simplify boolean constants in ternary operations
             "-jvn=1", // Use jad local variable naming
             "-jpr=1", // Use jad parameter variable naming
+            "-jrt=0", // Native image doesn't expose the jrt filesystem provider
             jarPath.toAbsolutePath().toString(),
             outputDir.toAbsolutePath().toString()
         };

@@ -62,7 +62,6 @@ gluonfx {
     target = "host"
     compilerArgs = listOf(
         "--enable-url-protocols=https",
-        "--add-modules=jdk.jrtfs,jdk.zipfs",
         "-H:+ReportExceptionStackTraces")
 }
 
