@@ -136,7 +136,9 @@ jobs:
                     New-Item -ItemType Directory -Path $dest | Out-Null
                     # Copy out of build dir to avoid EBUSY locks while upload-artifact zips files.
                     robocopy "build\gluonfx" $dest /E /R:5 /W:2 /NFL /NDL /NJH /NJS /NC /NS
-                    if ($LASTEXITCODE -gt 7) { exit $LASTEXITCODE }
+                    $code = $LASTEXITCODE
+                    if ($code -gt 7) { exit $code }
+                    exit 0
 
             -   name: Stage native artifacts (Linux/macOS)
                 if: runner.os != 'Windows'
