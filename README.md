@@ -13,7 +13,12 @@ remapped/decompiled Minecraft code.
 
 ## Requirements
 
-- Java 25+
+- Java 21+
+- GraalVM 21+ (set `GRAALVM_HOME`)
+- Native toolchain for your OS:
+  - Windows: Visual Studio Build Tools (C++ workload)
+  - macOS: Xcode Command Line Tools
+  - Linux: `gcc`, `g++`, and related build essentials
 
 ## Fork Notice
 
@@ -32,6 +37,41 @@ I don't plan to PR this to the original repo, as I have adjusted the code for my
 
 Details for installing and running **McDeob** can be found on the [**WIKI
 **](https://github.com/ShaneBeeStudios/McDeob/wiki)
+
+### CLI
+
+```bash
+./gradlew run --args="--versions"
+./gradlew run --args="--type client --version 1.21.4 --remap --decompile --zip"
+```
+
+### GUI
+
+```bash
+./gradlew run
+```
+
+### Native Build (GluonFX)
+
+Build native binary for the host OS:
+
+```bash
+./gradlew nativeBuild
+```
+
+Run native binary:
+
+```bash
+./gradlew nativeRun
+```
+
+Package installer/bundle:
+
+```bash
+./gradlew nativePackage
+```
+
+Artifacts are generated under `build/gluonfx/`.
 
 ### Note:
 

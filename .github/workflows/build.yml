@@ -14,8 +14,11 @@ permissions: { }
 
 jobs:
     build:
-        name: Build(Without Test)
-        runs-on: ubuntu-latest
+        name: Build(${{ matrix.os }})
+        strategy:
+            matrix:
+                os: [ ubuntu-latest, windows-latest, macos-latest ]
+        runs-on: ${{ matrix.os }}
         permissions:
             contents: read # to read code
         steps:
@@ -33,13 +36,14 @@ jobs:
                 uses: ./.github/actions/setup-base-environment
 
             -   name: Build without test
+                shell: bash
                 run: ./gradlew build -x test
 
             -   name: Upload a Build Artifact
                 uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
                 with:
                     # Artifact name
-                    name: McDeob-Artifact
+                    name: McDeob-Artifact-${{ matrix.os }}
                     # A file, directory or wildcard pattern that describes what to upload
                     path: |
                         build/libs/McDeob-*-all.jar
@@ -77,3 +81,48 @@ jobs:
                 if: success() || failure()
                 with:
                     report_paths: '**/build/test-results/test/TEST-*.xml'
+
+    native:
+        name: Native(${{ matrix.os }})
+        needs: [ build ]
+        strategy:
+            fail-fast: false
+            matrix:
+                os: [ ubuntu-latest, windows-latest, macos-latest ]
+        runs-on: ${{ matrix.os }}
+        permissions:
+            contents: read
+        steps:
+            -   name: Harden Runner
+                uses: step-security/harden-runner@fa2e9d605c4eeb9fcad4c99c224cee0c6c7f3594 # v2.16.0
+                with:
+                    egress-policy: audit
+
+            -   name: Checkout
+                uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+                with:
+                    persist-credentials: false
+
+            -   name: Setup GraalVM
+                uses: graalvm/setup-graalvm@v1
+                with:
+                    java-version: '21'
+                    distribution: 'graalvm-community'
+                    github-token: ${{ secrets.GITHUB_TOKEN }}
+                    cache: 'gradle'
+
+            -   name: Ensure Gradle wrapper is executable
+                shell: bash
+                run: chmod +x ./gradlew
+
+            -   name: Native compile
+                shell: bash
+                run: ./gradlew nativeCompile --stacktrace
+
+            -   name: Upload Native Artifact
+                uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+                if: success() || failure()
+                with:
+                    name: McDeob-Native-${{ matrix.os }}
+                    path: |
+                        build/gluonfx/**

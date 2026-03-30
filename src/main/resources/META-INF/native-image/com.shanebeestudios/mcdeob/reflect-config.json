@@ -1,0 +1,10 @@
+[
+  {
+    "name": "com.shanebeestudios.mcdeop.app.McDeobFxApp",
+    "allDeclaredConstructors": true
+  },
+  {
+    "name": "io.github.lxgaming.reconstruct.common.manager.TransformerManager",
+    "allDeclaredFields": true
+  }
+]

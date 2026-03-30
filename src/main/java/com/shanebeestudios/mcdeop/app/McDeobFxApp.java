@@ -132,7 +132,12 @@ public class McDeobFxApp extends Application {
                     final ResourceRequest request =
                             new ResourceRequest(manifest, McDeobFxApp.this.typeSelection.getSelectedType());
 
-                    Processor.runProcessor(request, McDeobFxApp.this.optionsPanel.getOptions(), this::updateMessage);
+                    final boolean success = Processor.runProcessor(
+                            request, McDeobFxApp.this.optionsPanel.getOptions(), this::updateMessage);
+                    if (!success) {
+                        this.updateMessage("Failed to complete processing");
+                        throw new IllegalStateException("Processor failed");
+                    }
                 } catch (final Exception e) {
                     log.error("Process failed", e);
                     this.updateMessage("Failed: " + e.getMessage());

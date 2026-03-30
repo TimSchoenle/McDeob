@@ -1,16 +1,16 @@
 package de.timmi6790.launchermeta;
 
-import dagger.Module;
-import dagger.Provides;
 import de.timmi6790.RequestModule;
-import javax.inject.Singleton;
 import okhttp3.OkHttpClient;
 
-@Module(includes = RequestModule.class)
 public class LauncherMetaModule {
-    @Provides
-    @Singleton
+    private final RequestModule requestModule = new RequestModule();
+
     public LauncherMeta getLauncherMeta(final OkHttpClient httpClient) {
         return new LauncherMeta(httpClient);
+    }
+
+    public LauncherMeta getLauncherMeta() {
+        return this.getLauncherMeta(this.requestModule.getHttpClient());
     }
 }

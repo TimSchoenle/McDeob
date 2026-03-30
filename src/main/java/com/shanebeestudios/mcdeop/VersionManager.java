@@ -9,7 +9,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
-import javax.inject.Inject;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
 
@@ -26,7 +25,6 @@ public class VersionManager {
     @Getter(lazy = true)
     private final List<Version> versions = this.fetchVersions();
 
-    @Inject
     public VersionManager(final LauncherMeta launcherMeta) {
         this.launcherMeta = launcherMeta;
     }
@@ -36,7 +34,6 @@ public class VersionManager {
             return false;
         }
 
-        System.out.println(version.releaseTime());
         return !version.releaseTime().isAfter(MINIMUM_RELEASE_TIME_WITH_NO_OBFUSCATION);
     }
 

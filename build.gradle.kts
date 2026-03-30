@@ -7,14 +7,9 @@ plugins {
     alias(libs.plugins.lombok)
     alias(libs.plugins.spotless)
     alias(libs.plugins.shadow)
-    alias(libs.plugins.sentry)
-    alias(libs.plugins.javafxplugin)
     alias(libs.plugins.buildconfig)
-}
-
-javafx {
-    version = "25"
-    modules = listOf("javafx.controls", "javafx.graphics")
+    alias(libs.plugins.javafxplugin)
+    alias(libs.plugins.gluonfx)
 }
 
 group = "com.shanebeestudios"
@@ -25,6 +20,11 @@ description = "McDeob"
 
 application {
     mainClass = "com.shanebeestudios.mcdeop.McDeob"
+}
+
+javafx {
+    version = "21.0.4"
+    modules = listOf("javafx.controls", "javafx.graphics")
 }
 
 repositories {
@@ -45,15 +45,22 @@ dependencies {
     implementation(libs.slf4j.simple)
     implementation(libs.okhttp)
 
-    implementation(libs.dagger)
-    annotationProcessor(libs.dagger.compiler)
     annotationProcessor(libs.picocli.codegen)
 }
 
 tasks {
+    named<JavaCompile>("compileJava") {
+        options.compilerArgs.add("-Aproject=${project.group}/${project.name}")
+    }
+
     shadowJar {
         manifest.attributes["Implementation-Version"] = project.version
     }
+}
+
+gluonfx {
+    target = "host"
+    compilerArgs = listOf("--enable-url-protocols=https", "-H:+ReportExceptionStackTraces")
 }
 
 allprojects {
@@ -66,7 +73,7 @@ allprojects {
 
     java {
         toolchain {
-            languageVersion = JavaLanguageVersion.of(25)
+            languageVersion = JavaLanguageVersion.of(21)
         }
     }
 

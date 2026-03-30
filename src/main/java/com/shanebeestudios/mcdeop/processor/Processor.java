@@ -60,16 +60,18 @@ public class Processor {
         this.decompiledZipPath = dataFolderPath.resolve(Path.of("decompiled.zip"));
     }
 
-    public static void runProcessor(
+    public static boolean runProcessor(
             final ResourceRequest request,
             final ProcessorOptions options,
             @Nullable final ResponseConsumer responseConsumer) {
         try {
             final Processor processor = new Processor(request, options, responseConsumer);
-            processor.init();
+            final boolean success = processor.init();
             processor.cleanup();
+            return success;
         } catch (final Exception e) {
             log.error("Failed to run processor", e);
+            return false;
         } finally {
             Util.forceGC();
         }
@@ -210,9 +212,9 @@ public class Processor {
         }
     }
 
-    public void init() {
+    public boolean init() {
         if (!this.isValid()) {
-            return;
+            return false;
         }
 
         try (final DurationTracker ignored = new DurationTracker(duration -> {
@@ -242,9 +244,10 @@ public class Processor {
             if (this.options.decompile()) {
                 this.decompileJar(remapped ? this.remappedJar : this.jarPath);
             }
-
+            return true;
         } catch (final IOException e) {
             log.error("Failed to run Processor!", e);
+            return false;
         }
     }
 

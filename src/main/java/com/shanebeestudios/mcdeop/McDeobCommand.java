@@ -22,23 +22,30 @@ public class McDeobCommand implements Callable<Integer> {
 
     @Option(
             names = {"-t", "--type"},
-            description = "What we should deobfuscate: client or server")
-    private String typeString;
+            required = true,
+            description = "What we should deobfuscate: ${COMPLETION-CANDIDATES}")
+    private SourceType type;
 
     @Option(
-            names = {"-r", "--remap"},
-            description = "Marks that we should remap the deobfuscated source")
-    private boolean remap;
+            names = "--remap",
+            negatable = true,
+            defaultValue = "true",
+            description = "Remap the obfuscated source (default: ${DEFAULT-VALUE})")
+    private boolean remap = true;
 
     @Option(
-            names = {"-d", "--decompile"},
-            description = "Marks that we should decompile the deobfuscated source")
-    private boolean decompile;
+            names = "--decompile",
+            negatable = true,
+            defaultValue = "true",
+            description = "Decompile classes into source files (default: ${DEFAULT-VALUE})")
+    private boolean decompile = true;
 
     @Option(
-            names = {"-z", "--zip"},
-            description = "Marks that we should zip the decompiled source")
-    private boolean zip;
+            names = "--zip",
+            negatable = true,
+            defaultValue = "true",
+            description = "Zip decompiled output (default: ${DEFAULT-VALUE})")
+    private boolean zip = true;
 
     @Option(
             names = "--versions",
@@ -67,62 +74,35 @@ public class McDeobCommand implements Callable<Integer> {
             return 1;
         }
 
-        if (this.typeString == null) {
-            log.error("No type specified, shutting down...");
+        final Version version =
+                this.versionManager.getVersion(this.versionString).orElse(null);
+        if (version == null) {
+            log.error("Invalid or unsupported version was specified, shutting down...");
             return 1;
         }
 
-        final SourceType type;
+        final ResourceRequest request;
         try {
-            type = SourceType.valueOf(this.typeString.toUpperCase());
-        } catch (final IllegalArgumentException e) {
-            log.error("Invalid type specified, shutting down...");
+            request = new ResourceRequest(this.versionManager.getReleaseManifest(version), this.type);
+        } catch (final IOException e) {
+            log.error("Failed to fetch release manifest", e);
             return 1;
         }
 
-        this.versionManager
-                .getVersion(this.versionString)
-                .map(version -> {
-                    try {
-                        return this.versionManager.getReleaseManifest(version);
-                    } catch (final IOException e) {
-                        log.error("Failed to fetch release manifest", e);
-                    }
+        boolean shouldRemap = this.remap;
+        if (shouldRemap && request.getMappings().isEmpty()) {
+            log.warn(
+                    "Mappings are not available for version {}, skipping remapping.",
+                    request.getVersion().id());
+            shouldRemap = false;
+        }
 
-                    return null;
-                })
-                .map(manifest -> new ResourceRequest(manifest, type))
-                .ifPresentOrElse(
-                        request -> {
-                            boolean shouldRemap = this.remap;
-                            if (shouldRemap && request.getMappings().isEmpty()) {
-                                log.warn(
-                                        "Mappings are not available for version {}, skipping remapping.",
-                                        request.getVersion().id());
-                                shouldRemap = false;
-                            }
+        final ProcessorOptions processorOptions = ProcessorOptions.builder()
+                .remap(shouldRemap)
+                .decompile(this.decompile)
+                .zipDecompileOutput(this.zip && this.decompile)
+                .build();
 
-                            final ProcessorOptions processorOptions = ProcessorOptions.builder()
-                                    .remap(shouldRemap)
-                                    .decompile(this.decompile)
-                                    .zipDecompileOutput(this.zip)
-                                    .build();
-
-                            final Thread processorThread = new Thread(
-                                    () -> Processor.runProcessor(request, processorOptions, null), "Processor");
-                            processorThread.start();
-                            try {
-                                processorThread.join();
-                            } catch (final InterruptedException e) {
-                                log.error("Processor interrupted", e);
-                                Thread.currentThread().interrupt();
-                            }
-                        },
-                        () -> {
-                            log.error("Invalid or unsupported version was specified, shutting down...");
-                            System.exit(1);
-                        });
-
-        return 0;
+        return Processor.runProcessor(request, processorOptions, null) ? 0 : 1;
     }
 }
