@@ -111,6 +111,10 @@ jobs:
                     github-token: ${{ secrets.GITHUB_TOKEN }}
                     cache: 'gradle'
 
+            -   name: Setup MSVC Developer Command Prompt
+                if: runner.os == 'Windows'
+                uses: ilammy/msvc-dev-cmd@v1
+
             -   name: Ensure Gradle wrapper is executable
                 shell: bash
                 run: chmod +x ./gradlew
