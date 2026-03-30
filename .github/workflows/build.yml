@@ -146,10 +146,24 @@ jobs:
                     mkdir -p "$RUNNER_TEMP/native-artifacts"
                     cp -R build/gluonfx/. "$RUNNER_TEMP/native-artifacts/"
 
+            -   name: Bundle native artifacts (Windows)
+                if: runner.os == 'Windows'
+                shell: pwsh
+                run: |
+                    $archive = Join-Path $env:RUNNER_TEMP "mcdeob-native-${{ matrix.os }}.zip"
+                    if (Test-Path $archive) { Remove-Item -Force $archive }
+                    Compress-Archive -Path (Join-Path $env:RUNNER_TEMP "native-artifacts\*") -DestinationPath $archive -Force
+
+            -   name: Bundle native artifacts (Linux/macOS)
+                if: runner.os != 'Windows'
+                shell: bash
+                run: |
+                    tar -C "$RUNNER_TEMP/native-artifacts" -czf "$RUNNER_TEMP/mcdeob-native-${{ matrix.os }}.tar.gz" .
+
             -   name: Upload Native Artifact
                 uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
                 if: success() || failure()
                 with:
                     name: McDeob-Native-${{ matrix.os }}
                     path: |
-                        ${{ runner.temp }}/native-artifacts/**
+                        ${{ runner.temp }}/mcdeob-native-${{ matrix.os }}.*
