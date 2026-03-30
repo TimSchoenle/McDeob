@@ -119,9 +119,9 @@ jobs:
                 shell: bash
                 run: chmod +x ./gradlew
 
-            -   name: Native link
+            -   name: Native build
                 shell: bash
-                run: ./gradlew nativeLink --stacktrace
+                run: ./gradlew nativeBuild --stacktrace
 
             -   name: Stop Gradle daemons
                 shell: bash
