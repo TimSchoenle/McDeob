@@ -111,19 +111,44 @@ jobs:
                     github-token: ${{ secrets.GITHUB_TOKEN }}
                     cache: 'gradle'
 
+            -   name: Install Linux native linker dependencies
+                if: runner.os == 'Linux'
+                shell: bash
+                run: |
+                    sudo apt-get update
+                    sudo apt-get install -y \
+                      pkg-config \
+                      libasound2-dev \
+                      libavcodec-dev \
+                      libavformat-dev \
+                      libavutil-dev
+
             -   name: Setup MSVC Developer Command Prompt
                 if: runner.os == 'Windows'
                 uses: ilammy/msvc-dev-cmd@v1
 
             -   name: Ensure Gradle wrapper is executable
+                if: runner.os != 'Windows'
                 shell: bash
                 run: chmod +x ./gradlew
 
-            -   name: Native build
+            -   name: Native build (Windows)
+                if: runner.os == 'Windows'
+                shell: pwsh
+                run: .\gradlew.bat nativeBuild --stacktrace
+
+            -   name: Native build (Linux/macOS)
+                if: runner.os != 'Windows'
                 shell: bash
                 run: ./gradlew nativeBuild --stacktrace
 
-            -   name: Stop Gradle daemons
+            -   name: Stop Gradle daemons (Windows)
+                if: runner.os == 'Windows'
+                shell: pwsh
+                run: .\gradlew.bat --stop
+
+            -   name: Stop Gradle daemons (Linux/macOS)
+                if: runner.os != 'Windows'
                 shell: bash
                 run: ./gradlew --stop || true
 
@@ -132,9 +157,12 @@ jobs:
                 shell: pwsh
                 run: |
                     $exe = Get-ChildItem -Path "build\gluonfx" -Recurse -File -Filter *.exe |
+                        Where-Object { $_.Name -notmatch "java|jpackage|uninstall" } |
                         Sort-Object Length -Descending |
                         Select-Object -First 1
                     if ($null -eq $exe) {
+                        Write-Host "No .exe found under build\\gluonfx. Dumping candidates:"
+                        Get-ChildItem -Path "build\gluonfx" -Recurse -File | Select-Object FullName
                         throw "Could not find native .exe output under build/gluonfx"
                     }
                     $dest = Join-Path $env:RUNNER_TEMP "mcdeob-native-${{ matrix.os }}.exe"
@@ -146,17 +174,18 @@ jobs:
                 run: |
                     candidate="$(find build/gluonfx -type f \( -name 'McDeob' -o -name 'mcdeob' \) | head -n 1)"
                     if [ -z "$candidate" ]; then
-                      candidate="$(find build/gluonfx -type f -perm -111 | head -n 1)"
+                      candidate="$(find build/gluonfx -type f -perm -111 | grep -Ev 'java|jpackage|uninstall' | head -n 1)"
                     fi
                     if [ -z "$candidate" ]; then
                       echo "Could not find native executable under build/gluonfx"
+                      find build/gluonfx -type f
                       exit 1
                     fi
                     cp "$candidate" "$RUNNER_TEMP/mcdeob-native-${{ matrix.os }}"
 
             -   name: Upload Native Artifact
                 uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
-                if: success() || failure()
+                if: success()
                 with:
                     name: McDeob-Native-${{ matrix.os }}
                     path: |
