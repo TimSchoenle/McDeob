@@ -8,11 +8,11 @@ public class VineflowerDecompiler implements Decompiler {
     public void decompile(final Path jarPath, final Path outputDir) {
         // Setup FernFlower to properly decompile the jar file
         final String[] args = {
-            "-asc=1", // Encode non-ASCII characters in string and character literals as Unicode escapes
-            "-tcs=1", // Simplify boolean constants in ternary operations
+            "--ascii-strings=1", // Encode non-ASCII characters in string and character literals as Unicode escapes
+            "--ternary-constant-simplification=1", // Simplify boolean constants in ternary operations
             "-jvn=1", // Use jad local variable naming
             "-jpr=1", // Use jad parameter variable naming
-            "-jrt=0", // Native image doesn't expose the jrt filesystem provider
+            "--include-runtime=0", // Native image doesn't expose the jrt filesystem provider
             jarPath.toAbsolutePath().toString(),
             outputDir.toAbsolutePath().toString()
         };
