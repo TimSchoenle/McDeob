@@ -29,6 +29,11 @@ public class McDeobTypeSelection extends HBox {
         return this.serverRadio.isSelected() ? SourceType.SERVER : SourceType.CLIENT;
     }
 
+    public void addSelectionListener(final Runnable runnable) {
+        this.clientRadio.selectedProperty().addListener((obs, oldValue, newValue) -> runnable.run());
+        this.serverRadio.selectedProperty().addListener((obs, oldValue, newValue) -> runnable.run());
+    }
+
     public void setControlsDisable(boolean disable) {
         this.clientRadio.setDisable(disable);
         this.serverRadio.setDisable(disable);

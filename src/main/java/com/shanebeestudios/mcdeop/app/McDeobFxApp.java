@@ -54,6 +54,12 @@ public class McDeobFxApp extends Application {
         final McDeobTitle title = new McDeobTitle();
 
         this.typeSelection = new McDeobTypeSelection();
+        this.typeSelection.addSelectionListener(() -> {
+            final Version selectedVersion = this.versionSelection != null ? this.versionSelection.getValue() : null;
+            if (selectedVersion != null) {
+                this.updateRemapVisibility(selectedVersion);
+            }
+        });
 
         // Options Panel initialized before Version Selection to avoid NPE
         this.optionsPanel = new McDeobOptionsPanel();

@@ -27,9 +27,8 @@ public class McDeobOptionsPanel extends HBox {
 
     public void setRemapVisible(boolean visible) {
         this.remapCheckBox.setVisible(visible);
-        if (!visible) {
-            this.remapCheckBox.setSelected(false);
-        }
+        this.remapCheckBox.setManaged(visible);
+        this.remapCheckBox.setSelected(visible);
     }
 
     public ProcessorOptions getOptions() {
