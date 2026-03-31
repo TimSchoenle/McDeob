@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.10.0](https://github.com/TimSchoenle/McDeob/compare/v2.9.4...v2.10.0) (2026-03-31)
+
+
+### Features
+
+* graalvm native images & UI rewrite ([#165](https://github.com/TimSchoenle/McDeob/issues/165)) ([bfd0ca4](https://github.com/TimSchoenle/McDeob/commit/bfd0ca40ef4642236394873cb9a8f382f77e1aa1))
+
 ## [2.9.4](https://github.com/TimSchoenle/McDeob/compare/v2.9.3...v2.9.4) (2026-03-27)
 
 
