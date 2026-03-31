@@ -6,9 +6,14 @@ import java.util.function.Consumer;
 import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
+import javafx.scene.input.Clipboard;
+import javafx.scene.input.ClipboardContent;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 
 public class McDeobLogWindow extends VBox {
@@ -23,21 +28,36 @@ public class McDeobLogWindow extends VBox {
     public McDeobLogWindow() {
         super(6);
         this.setAlignment(Pos.CENTER_LEFT);
-        this.setPadding(new Insets(6, 0, 0, 0));
+        this.setPadding(new Insets(4, 0, 0, 0));
         this.setFillWidth(true);
 
-        final Label title = new Label("Logs");
+        final Label title = new Label("Activity Log");
         title.getStyleClass().add("logs-label");
+
+        final Button copyButton = new Button("Copy");
+        copyButton.getStyleClass().add("ghost-button");
+        copyButton.setOnAction(e -> this.copyLogs());
+
+        final Button clearButton = new Button("Clear");
+        clearButton.getStyleClass().add("ghost-button");
+        clearButton.setOnAction(e -> this.clearLogs());
+
+        final Region spacer = new Region();
+        HBox.setHgrow(spacer, Priority.ALWAYS);
+
+        final HBox toolbar = new HBox(8, title, spacer, copyButton, clearButton);
+        toolbar.setAlignment(Pos.CENTER_LEFT);
+        toolbar.getStyleClass().add("log-toolbar");
 
         this.logArea = new TextArea();
         this.logArea.setEditable(false);
         this.logArea.setWrapText(false);
-        this.logArea.setPrefRowCount(10);
+        this.logArea.setPrefRowCount(14);
         this.logArea.setFocusTraversable(false);
         this.logArea.getStyleClass().add("logs-window");
 
         VBox.setVgrow(this.logArea, Priority.ALWAYS);
-        this.getChildren().addAll(title, this.logArea);
+        this.getChildren().addAll(toolbar, this.logArea);
 
         this.listener = this::appendLog;
         JavaLogBridge.registerListener(this.listener);
@@ -91,5 +111,15 @@ public class McDeobLogWindow extends VBox {
             this.logArea.deleteText(0, overflow);
         }
         this.logArea.positionCaret(this.logArea.getLength());
+    }
+
+    private void copyLogs() {
+        final ClipboardContent content = new ClipboardContent();
+        content.putString(this.logArea.getText());
+        Clipboard.getSystemClipboard().setContent(content);
+    }
+
+    private void clearLogs() {
+        this.logArea.clear();
     }
 }

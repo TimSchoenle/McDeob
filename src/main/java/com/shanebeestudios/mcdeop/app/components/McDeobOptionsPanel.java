@@ -3,26 +3,38 @@ package com.shanebeestudios.mcdeop.app.components;
 import com.shanebeestudios.mcdeop.processor.ProcessorOptions;
 import javafx.geometry.Pos;
 import javafx.scene.control.CheckBox;
-import javafx.scene.layout.HBox;
+import javafx.scene.layout.FlowPane;
 
-public class McDeobOptionsPanel extends HBox {
+public class McDeobOptionsPanel extends FlowPane {
     private final CheckBox remapCheckBox;
     private final CheckBox decompileCheckBox;
     private final CheckBox zipCheckBox;
 
     public McDeobOptionsPanel() {
-        super(15);
-        this.setAlignment(Pos.CENTER);
+        super(10, 10);
+        this.setAlignment(Pos.CENTER_LEFT);
+        this.getStyleClass().add("options-panel");
+        this.setMaxWidth(Double.MAX_VALUE);
+        this.getStyleClass().add("options-flow");
+        this.prefWrapLengthProperty().bind(this.widthProperty());
 
         this.remapCheckBox = new CheckBox("Remap");
         this.decompileCheckBox = new CheckBox("Decompile");
         this.zipCheckBox = new CheckBox("Zip");
+
+        this.configureOption(this.remapCheckBox);
+        this.configureOption(this.decompileCheckBox);
+        this.configureOption(this.zipCheckBox);
 
         this.remapCheckBox.setSelected(true);
         this.decompileCheckBox.setSelected(true);
         this.zipCheckBox.setSelected(true);
 
         this.getChildren().addAll(this.remapCheckBox, this.decompileCheckBox, this.zipCheckBox);
+    }
+
+    private void configureOption(final CheckBox box) {
+        box.getStyleClass().add("option-chip");
     }
 
     public void setRemapVisible(final boolean visible) {
