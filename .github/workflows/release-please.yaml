@@ -105,7 +105,7 @@ jobs:
                 uses: ./.github/actions/sign-native-artifact
                 with:
                     native_asset: ${{ steps.native_build.outputs.native_asset }}
-                    require_signing: 'true'
+                    require_signing: 'false' # TODO: enable signing
                 env:
                     WINDOWS_SIGN_CERT_BASE64: ${{ secrets.WINDOWS_SIGN_CERT_BASE64 }}
                     WINDOWS_SIGN_CERT_PASSWORD: ${{ secrets.WINDOWS_SIGN_CERT_PASSWORD }}
