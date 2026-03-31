@@ -13,7 +13,7 @@ public class McDeobStatusBox extends TextField {
         this.getStyleClass().add("status-box");
     }
 
-    public void updateStatus(String msg, boolean isError) {
+    public void updateStatus(final String msg, final boolean isError) {
         this.setText(msg);
         if (isError) {
             this.setStyle("-fx-text-fill: red;");

@@ -6,6 +6,7 @@ import com.shanebeestudios.mcdeop.processor.ResourceRequest;
 import com.shanebeestudios.mcdeop.processor.SourceType;
 import de.timmi6790.launchermeta.data.version.Version;
 import java.io.IOException;
+import java.util.Optional;
 import java.util.concurrent.Callable;
 import lombok.extern.slf4j.Slf4j;
 import picocli.CommandLine.Command;
@@ -74,12 +75,12 @@ public class McDeobCommand implements Callable<Integer> {
             return 1;
         }
 
-        final Version version =
-                this.versionManager.getVersion(this.versionString).orElse(null);
-        if (version == null) {
+        final Optional<Version> versionResult = this.versionManager.getVersion(this.versionString);
+        if (versionResult.isEmpty()) {
             log.error("Invalid or unsupported version was specified, shutting down...");
             return 1;
         }
+        final Version version = versionResult.get();
 
         final ResourceRequest request;
         try {

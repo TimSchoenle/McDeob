@@ -12,7 +12,6 @@ import de.timmi6790.launchermeta.data.version.VersionType;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.net.URL;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
@@ -32,8 +31,8 @@ public class LauncherMeta {
 
     public LauncherMeta(final OkHttpClient httpClient) {
         try {
-            this.versionManifestUrl = new URI(VERSION_MANIFEST_URL).toURL();
-        } catch (final MalformedURLException | URISyntaxException e) {
+            this.versionManifestUrl = URI.create(VERSION_MANIFEST_URL).toURL();
+        } catch (final MalformedURLException e) {
             throw new IllegalStateException("Failed to parse version manifest url", e);
         }
         this.httpClient = httpClient;
@@ -68,17 +67,14 @@ public class LauncherMeta {
     public ReleaseManifest getReleaseManifest(final Version version) throws IOException {
         final JsonNode root = this.get(version.url());
         final Downloads downloads = this.mapDownloads(root.path("downloads"));
-        final ReleaseManifest releaseManifest =
-                new ReleaseManifest(downloads, root.path("mainClass").asText(null));
-        releaseManifest.setVersion(version);
-        return releaseManifest;
+        return new ReleaseManifest(downloads, root.path("mainClass").asText(null), version);
     }
 
     private Version mapVersion(final JsonNode node) throws MalformedURLException {
         return new Version(
                 node.path("id").asText(),
                 this.parseVersionType(node.path("type").asText()),
-                new URL(node.path("url").asText()),
+                this.toUrl(node.path("url").asText()),
                 OffsetDateTime.parse(node.path("releaseTime").asText()));
     }
 
@@ -102,6 +98,10 @@ public class LauncherMeta {
         return new DownloadInfo(
                 node.path("sha1").asText(null),
                 node.path("size").asLong(0L),
-                new URL(node.path("url").asText()));
+                this.toUrl(node.path("url").asText()));
+    }
+
+    private URL toUrl(final String rawUrl) throws MalformedURLException {
+        return URI.create(rawUrl).toURL();
     }
 }

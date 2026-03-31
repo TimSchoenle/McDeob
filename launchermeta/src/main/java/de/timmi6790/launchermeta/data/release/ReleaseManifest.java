@@ -5,11 +5,12 @@ import de.timmi6790.launchermeta.data.version.Version;
 public class ReleaseManifest {
     private final Downloads downloads;
     private final String mainClass;
-    private Version version;
+    private final Version version;
 
-    public ReleaseManifest(final Downloads downloads, final String mainClass) {
+    public ReleaseManifest(final Downloads downloads, final String mainClass, final Version version) {
         this.downloads = downloads;
         this.mainClass = mainClass;
+        this.version = version;
     }
 
     public Downloads getDownloads() {
@@ -22,9 +23,5 @@ public class ReleaseManifest {
 
     public Version getVersion() {
         return this.version;
-    }
-
-    public void setVersion(final Version version) {
-        this.version = version;
     }
 }

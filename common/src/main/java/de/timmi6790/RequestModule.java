@@ -1,10 +1,13 @@
 package de.timmi6790;
 
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class RequestModule {
-    public OkHttpClient getHttpClient() {
+    public static OkHttpClient createHttpClient() {
         return new OkHttpClient.Builder()
                 .addInterceptor(chain -> {
                     final Request originalRequest = chain.request();

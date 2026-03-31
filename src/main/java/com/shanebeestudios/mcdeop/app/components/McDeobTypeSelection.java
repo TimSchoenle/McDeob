@@ -14,7 +14,7 @@ public class McDeobTypeSelection extends HBox {
         super(20);
         this.setAlignment(Pos.CENTER);
 
-        ToggleGroup typeGroup = new ToggleGroup();
+        final ToggleGroup typeGroup = new ToggleGroup();
         this.clientRadio = new RadioButton("Client");
         this.clientRadio.setToggleGroup(typeGroup);
         this.clientRadio.setSelected(true);
@@ -34,7 +34,7 @@ public class McDeobTypeSelection extends HBox {
         this.serverRadio.selectedProperty().addListener((obs, oldValue, newValue) -> runnable.run());
     }
 
-    public void setControlsDisable(boolean disable) {
+    public void setControlsDisable(final boolean disable) {
         this.clientRadio.setDisable(disable);
         this.serverRadio.setDisable(disable);
     }

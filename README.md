@@ -35,8 +35,8 @@ I don't plan to PR this to the original repo, as I have adjusted the code for my
 
 ## Running
 
-Details for installing and running **McDeob** can be found on the [**WIKI
-**](https://github.com/ShaneBeeStudios/McDeob/wiki)
+Details for installing and running **McDeob** can be found on the
+[**Wiki**](https://github.com/ShaneBeeStudios/McDeob/wiki).
 
 ### CLI
 
@@ -75,10 +75,10 @@ Artifacts are generated under `build/gluonfx/`.
 
 ### Note:
 
-The remapping process takes around 2 minutes (give or take). Whilst its remapping you will see the progress in the
+The remapping process takes around 2 minutes (give or take). While it is remapping you will see progress in the
 app.   
 The decompiling process takes about 3 minutes (give or take). Currently there is no progress in the app, so just wait
-til the app says its completed.    
+until the app says it is completed.    
 (These numbers are based on a test run on my Mac (MacbookPro with M1 chip), times may vary on other machines.)
 
 ### SUPER IMPORTANT NOTE
@@ -86,7 +86,7 @@ til the app says its completed.
 The files output by this app are for your own personal use only.   
 The mappings used to decompile are provided by Mojang, but come with a hefty copyright from Microsoft.   
 You can use these files personally however you see fit, but you are not permitted to distribute them, since they do
-contain proprietery Minecraft code.    
+contain proprietary Minecraft code.    
 That said, you may **NOT** upload the resulting files to something like GitHub.
 
 ## Preview

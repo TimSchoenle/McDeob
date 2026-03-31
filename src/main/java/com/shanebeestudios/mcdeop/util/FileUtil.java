@@ -1,6 +1,5 @@
 package com.shanebeestudios.mcdeop.util;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -15,12 +14,12 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class FileUtil {
     public static void remove(final Path path) throws IOException {
-        if (!path.toFile().exists()) {
+        if (!Files.exists(path)) {
             return;
         }
 
         try (final Stream<Path> files = Files.walk(path)) {
-            files.sorted(Comparator.reverseOrder()).map(Path::toFile).forEach(File::delete);
+            files.sorted(Comparator.reverseOrder()).forEach(FileUtil::deletePath);
         }
     }
 
@@ -40,6 +39,14 @@ public class FileUtil {
                 Files.copy(path, zs);
                 zs.closeEntry();
             }
+        }
+    }
+
+    private static void deletePath(final Path path) {
+        try {
+            Files.deleteIfExists(path);
+        } catch (final IOException exception) {
+            throw new IllegalStateException("Failed to delete " + path.toAbsolutePath(), exception);
         }
     }
 }

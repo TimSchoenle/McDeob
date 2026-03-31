@@ -6,9 +6,9 @@ import java.util.Collection;
 import java.util.List;
 
 public class ReconConfig implements Config {
-    Path input;
-    Path output;
-    Path map;
+    private Path input;
+    private Path output;
+    private Path map;
     private int threads = Runtime.getRuntime().availableProcessors();
 
     @Override

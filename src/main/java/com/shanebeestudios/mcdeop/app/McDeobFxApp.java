@@ -1,7 +1,12 @@
 package com.shanebeestudios.mcdeop.app;
 
 import com.shanebeestudios.mcdeop.VersionManager;
-import com.shanebeestudios.mcdeop.app.components.*;
+import com.shanebeestudios.mcdeop.app.components.McDeobLogWindow;
+import com.shanebeestudios.mcdeop.app.components.McDeobOptionsPanel;
+import com.shanebeestudios.mcdeop.app.components.McDeobStatusBox;
+import com.shanebeestudios.mcdeop.app.components.McDeobTitle;
+import com.shanebeestudios.mcdeop.app.components.McDeobTypeSelection;
+import com.shanebeestudios.mcdeop.app.components.McDeobVersionSelection;
 import com.shanebeestudios.mcdeop.processor.Processor;
 import com.shanebeestudios.mcdeop.processor.ResourceRequest;
 import com.shanebeestudios.mcdeop.util.GeneratedConstant;

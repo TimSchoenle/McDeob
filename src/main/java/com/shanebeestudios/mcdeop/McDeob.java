@@ -19,7 +19,7 @@ public class McDeob {
             System.setProperty("glass.accessible.force", "false");
         }
 
-        final LauncherMeta launcherMeta = new LauncherMeta(new RequestModule().getHttpClient());
+        final LauncherMeta launcherMeta = new LauncherMeta(RequestModule.createHttpClient());
         final VersionManager versionManager = new VersionManager(launcherMeta);
 
         if (args.length == 0) {

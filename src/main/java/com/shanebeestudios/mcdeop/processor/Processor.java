@@ -7,11 +7,13 @@ import com.shanebeestudios.mcdeop.processor.remapper.Remapper;
 import com.shanebeestudios.mcdeop.util.DurationTracker;
 import com.shanebeestudios.mcdeop.util.FileUtil;
 import com.shanebeestudios.mcdeop.util.Util;
+import de.timmi6790.RequestModule;
 import java.io.IOException;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Locale;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
@@ -50,7 +52,7 @@ public class Processor {
         this.responseConsumer = responseConsumer;
         this.remapper = new ReconstructRemapper();
         this.decompiler = new VineflowerDecompiler();
-        this.httpClient = Util.createHttpClient();
+        this.httpClient = RequestModule.createHttpClient();
 
         final Path dataFolderPath = this.getDataFolder();
         this.jarPath = dataFolderPath.resolve("source.jar");
@@ -86,7 +88,8 @@ public class Processor {
 
         try {
             Files.createDirectories(folderPath);
-        } catch (final IOException ignore) {
+        } catch (final IOException exception) {
+            throw new IllegalStateException("Failed to create data directory: " + folderPath, exception);
         }
 
         return folderPath;
@@ -149,9 +152,10 @@ public class Processor {
     }
 
     private CompletableFuture<Void> downloadJar() {
+        final URL jarUrl = Objects.requireNonNull(this.getJarUrl(), "jar URL should be validated before download");
         return CompletableFuture.supplyAsync(() -> {
             try {
-                this.downloadFile(this.getJarUrl(), this.jarPath, "JAR");
+                this.downloadFile(jarUrl, this.jarPath, "JAR");
             } catch (final IOException e) {
                 throw new CompletionException(e);
             }

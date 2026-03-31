@@ -25,7 +25,7 @@ public class McDeobOptionsPanel extends HBox {
         this.getChildren().addAll(this.remapCheckBox, this.decompileCheckBox, this.zipCheckBox);
     }
 
-    public void setRemapVisible(boolean visible) {
+    public void setRemapVisible(final boolean visible) {
         this.remapCheckBox.setVisible(visible);
         this.remapCheckBox.setManaged(visible);
         this.remapCheckBox.setSelected(visible);
@@ -39,7 +39,7 @@ public class McDeobOptionsPanel extends HBox {
                 .build();
     }
 
-    public void setControlsDisable(boolean disable) {
+    public void setControlsDisable(final boolean disable) {
         this.remapCheckBox.setDisable(disable);
         this.decompileCheckBox.setDisable(disable);
         this.zipCheckBox.setDisable(disable);

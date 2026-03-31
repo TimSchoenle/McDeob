@@ -2,7 +2,6 @@ import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 
 plugins {
     `java-library`
-    java
     application
     alias(libs.plugins.lombok)
     alias(libs.plugins.spotless)
@@ -29,16 +28,11 @@ javafx {
 
 repositories {
     mavenCentral()
-
-    maven("https://jitpack.io")
-    maven("https://repo.kenzie.mx/releases")
-    maven("https://repo.maven.apache.org/maven2/")
 }
 
 dependencies {
     implementation(project(":common", "shadow"))
     implementation(project(":launchermeta", "shadow"))
-    implementation(libs.mirror)
     implementation(libs.reconstruct.common)
     implementation(libs.vineflower)
     implementation(libs.picocli)
