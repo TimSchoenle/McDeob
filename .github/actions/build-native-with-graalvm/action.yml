@@ -1,0 +1,113 @@
+name: "Build Native Executable with GraalVM"
+description: "Build and stage native executable artifacts with GraalVM across supported runners"
+
+outputs:
+    native_asset:
+        description: "Absolute path to the staged native executable"
+        value: ${{ steps.native_asset.outputs.path }}
+
+runs:
+    using: "composite"
+    steps:
+        -   name: Setup GraalVM
+            uses: graalvm/setup-graalvm@2149f395d36ce12ad4ee5d7f334b26bf081fa555 # v1.5.1
+            with:
+                java-version: "21"
+                distribution: "graalvm-community"
+                github-token: ${{ github.token }}
+                cache: "gradle"
+
+        -   name: Install Linux native linker dependencies
+            if: runner.os == 'Linux'
+            shell: bash
+            run: |
+                sudo apt-get update
+                sudo apt-get install -y \
+                  pkg-config \
+                  libasound2-dev \
+                  libavcodec-dev \
+                  libavformat-dev \
+                  libavutil-dev \
+                  libfreetype6-dev \
+                  libgl-dev \
+                  libglib2.0-dev \
+                  libgtk-3-dev \
+                  libpango1.0-dev \
+                  libx11-dev \
+                  libxtst-dev
+
+        -   name: Setup MSVC Developer Command Prompt
+            if: runner.os == 'Windows'
+            uses: ilammy/msvc-dev-cmd@0b201ec74fa43914dc39ae48a89fd1d8cb592756 # v1.13.0
+
+        -   name: Ensure Gradle wrapper is executable
+            if: runner.os != 'Windows'
+            shell: bash
+            run: chmod +x ./gradlew
+
+        -   name: Native build (Windows)
+            if: runner.os == 'Windows'
+            shell: pwsh
+            run: .\gradlew.bat nativeBuild --stacktrace
+
+        -   name: Native build (Linux/macOS)
+            if: runner.os != 'Windows'
+            shell: bash
+            run: ./gradlew nativeBuild --stacktrace
+
+        -   name: Stop Gradle daemons (Windows)
+            if: runner.os == 'Windows'
+            shell: pwsh
+            run: .\gradlew.bat --stop
+
+        -   name: Stop Gradle daemons (Linux/macOS)
+            if: runner.os != 'Windows'
+            shell: bash
+            run: ./gradlew --stop || true
+
+        -   name: Stage native executable (Windows)
+            if: runner.os == 'Windows'
+            shell: pwsh
+            run: |
+                $exe = Get-ChildItem -Path "build\gluonfx" -Recurse -File -Filter *.exe |
+                    Where-Object { $_.Name -notmatch "java|jpackage|uninstall" } |
+                    Sort-Object Length -Descending |
+                    Select-Object -First 1
+                if ($null -eq $exe) {
+                    Write-Host "No .exe found under build\\gluonfx. Dumping candidates:"
+                    Get-ChildItem -Path "build\gluonfx" -Recurse -File | Select-Object FullName
+                    throw "Could not find native .exe output under build/gluonfx"
+                }
+                $arch = $env:RUNNER_ARCH.ToLowerInvariant()
+                $dest = Join-Path $env:RUNNER_TEMP "McDeob-windows-$arch.exe"
+                Copy-Item -Path $exe.FullName -Destination $dest -Force
+                "NATIVE_ASSET=$dest" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+
+        -   name: Stage native executable (Linux/macOS)
+            if: runner.os != 'Windows'
+            shell: bash
+            run: |
+                candidate="$(find build/gluonfx -type f \( -name 'McDeob' -o -name 'mcdeob' \) | head -n 1)"
+                if [ -z "$candidate" ]; then
+                  candidate="$(find build/gluonfx -type f -perm -111 | grep -Ev 'java|jpackage|uninstall' | head -n 1)"
+                fi
+                if [ -z "$candidate" ]; then
+                  echo "Could not find native executable under build/gluonfx"
+                  find build/gluonfx -type f
+                  exit 1
+                fi
+                os_name="$(echo "$RUNNER_OS" | tr '[:upper:]' '[:lower:]')"
+                arch="$(echo "$RUNNER_ARCH" | tr '[:upper:]' '[:lower:]')"
+                dest="$RUNNER_TEMP/McDeob-${os_name}-${arch}"
+                cp "$candidate" "$dest"
+                chmod +x "$dest"
+                echo "NATIVE_ASSET=$dest" >> "$GITHUB_ENV"
+
+        -   name: Resolve native artifact path
+            id: native_asset
+            shell: pwsh
+            run: |
+                if (-not $env:NATIVE_ASSET) {
+                    throw "NATIVE_ASSET was not set by the staging step"
+                }
+                "path=$env:NATIVE_ASSET" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append

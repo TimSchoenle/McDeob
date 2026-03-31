@@ -1,0 +1,18 @@
+{
+  "resources": {
+    "includes": [
+      {
+        "pattern": "simplelogger\\.properties"
+      },
+      {
+        "pattern": "styles\\.css"
+      },
+      {
+        "pattern": "images/1024\\.png"
+      },
+      {
+        "pattern": "images/1024\\.icns"
+      }
+    ]
+  }
+}

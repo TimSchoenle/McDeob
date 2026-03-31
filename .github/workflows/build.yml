@@ -14,8 +14,11 @@ permissions: { }
 
 jobs:
     build:
-        name: Build(Without Test)
-        runs-on: ubuntu-latest
+        name: Build(${{ matrix.os }})
+        strategy:
+            matrix:
+                os: [ ubuntu-latest, windows-latest, macos-latest ]
+        runs-on: ${{ matrix.os }}
         permissions:
             contents: read # to read code
         steps:
@@ -33,13 +36,14 @@ jobs:
                 uses: ./.github/actions/setup-base-environment
 
             -   name: Build without test
+                shell: bash
                 run: ./gradlew build -x test
 
             -   name: Upload a Build Artifact
                 uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
                 with:
                     # Artifact name
-                    name: McDeob-Artifact
+                    name: McDeob-Artifact-${{ matrix.os }}
                     # A file, directory or wildcard pattern that describes what to upload
                     path: |
                         build/libs/McDeob-*-all.jar
@@ -77,3 +81,57 @@ jobs:
                 if: success() || failure()
                 with:
                     report_paths: '**/build/test-results/test/TEST-*.xml'
+
+    native:
+        name: Native(${{ matrix.os }})
+        needs: [ build ]
+        strategy:
+            fail-fast: false
+            matrix:
+                os: [ ubuntu-latest, windows-latest, macos-latest ]
+        runs-on: ${{ matrix.os }}
+        permissions:
+            contents: read
+        steps:
+            -   name: Harden Runner
+                uses: step-security/harden-runner@fa2e9d605c4eeb9fcad4c99c224cee0c6c7f3594 # v2.16.0
+                with:
+                    egress-policy: audit
+
+            -   name: Checkout
+                uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+                with:
+                    persist-credentials: false
+
+            -   name: Build Native Executable
+                id: native_build
+                uses: ./.github/actions/build-native-with-graalvm
+
+            -   name: Sign Native Artifact
+                uses: ./.github/actions/sign-native-artifact
+                with:
+                    native_asset: ${{ steps.native_build.outputs.native_asset }}
+                    require_signing: 'false'
+                env:
+                    WINDOWS_SIGN_CERT_BASE64: ${{ secrets.WINDOWS_SIGN_CERT_BASE64 }}
+                    WINDOWS_SIGN_CERT_PASSWORD: ${{ secrets.WINDOWS_SIGN_CERT_PASSWORD }}
+                    MACOS_SIGN_CERT_BASE64: ${{ secrets.MACOS_SIGN_CERT_BASE64 }}
+                    MACOS_SIGN_CERT_PASSWORD: ${{ secrets.MACOS_SIGN_CERT_PASSWORD }}
+                    MACOS_SIGN_IDENTITY: ${{ secrets.MACOS_SIGN_IDENTITY }}
+                    MACOS_NOTARY_APPLE_ID: ${{ secrets.MACOS_NOTARY_APPLE_ID }}
+                    MACOS_NOTARY_TEAM_ID: ${{ secrets.MACOS_NOTARY_TEAM_ID }}
+                    MACOS_NOTARY_APP_PASSWORD: ${{ secrets.MACOS_NOTARY_APP_PASSWORD }}
+                    LINUX_GPG_PRIVATE_KEY_BASE64: ${{ secrets.LINUX_GPG_PRIVATE_KEY_BASE64 }}
+                    LINUX_GPG_PASSPHRASE: ${{ secrets.LINUX_GPG_PASSPHRASE }}
+                    LINUX_GPG_KEY_ID: ${{ secrets.LINUX_GPG_KEY_ID }}
+
+            -   name: Upload Native Artifact
+                uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
+                if: success()
+                with:
+                    name: McDeob-Native-${{ runner.os }}-${{ runner.arch }}
+                    path: |
+                        ${{ steps.native_build.outputs.native_asset }}
+                        ${{ steps.native_build.outputs.native_asset }}.asc
+                        ${{ steps.native_build.outputs.native_asset }}.zip
+                    if-no-files-found: error

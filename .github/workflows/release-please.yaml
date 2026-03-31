@@ -41,8 +41,8 @@ jobs:
                 with:
                     token: ${{ steps.generate_token.outputs.token }}
 
-    artifacts:
-        name: Release Artifacts
+    jar-artifact:
+        name: Release Jar Artifact
         needs: release-please
         runs-on: ubuntu-latest
         if: ${{ needs.release-please.outputs.release_created }}
@@ -73,4 +73,62 @@ jobs:
                     RELEASE_TAG: ${{ needs.release-please.outputs.tag_name }}
                 run: |
                     JAR_PATH=$(ls build/libs/McDeob-*-all.jar)
-                    gh release upload $RELEASE_TAG "$JAR_PATH#McDeob.jar"
+                    gh release upload $RELEASE_TAG "$JAR_PATH#McDeob.jar" --clobber
+
+    native-artifacts:
+        name: Release Native(${{ matrix.os }})
+        needs: release-please
+        runs-on: ${{ matrix.os }}
+        if: ${{ needs.release-please.outputs.release_created }}
+        strategy:
+            fail-fast: false
+            matrix:
+                os: [ ubuntu-latest, windows-latest, macos-latest ]
+        permissions:
+            contents: write # to release artifacts
+        steps:
+            -   name: Harden Runner
+                uses: step-security/harden-runner@fa2e9d605c4eeb9fcad4c99c224cee0c6c7f3594 # v2.16.0
+                with:
+                    egress-policy: audit
+
+            -   name: Checkout
+                uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+                with:
+                    persist-credentials: false
+
+            -   name: Build Native Executable
+                id: native_build
+                uses: ./.github/actions/build-native-with-graalvm
+
+            -   name: Sign Native Artifact
+                uses: ./.github/actions/sign-native-artifact
+                with:
+                    native_asset: ${{ steps.native_build.outputs.native_asset }}
+                    require_signing: 'false' # TODO: enable signing
+                env:
+                    WINDOWS_SIGN_CERT_BASE64: ${{ secrets.WINDOWS_SIGN_CERT_BASE64 }}
+                    WINDOWS_SIGN_CERT_PASSWORD: ${{ secrets.WINDOWS_SIGN_CERT_PASSWORD }}
+                    MACOS_SIGN_CERT_BASE64: ${{ secrets.MACOS_SIGN_CERT_BASE64 }}
+                    MACOS_SIGN_CERT_PASSWORD: ${{ secrets.MACOS_SIGN_CERT_PASSWORD }}
+                    MACOS_SIGN_IDENTITY: ${{ secrets.MACOS_SIGN_IDENTITY }}
+                    MACOS_NOTARY_APPLE_ID: ${{ secrets.MACOS_NOTARY_APPLE_ID }}
+                    MACOS_NOTARY_TEAM_ID: ${{ secrets.MACOS_NOTARY_TEAM_ID }}
+                    MACOS_NOTARY_APP_PASSWORD: ${{ secrets.MACOS_NOTARY_APP_PASSWORD }}
+                    LINUX_GPG_PRIVATE_KEY_BASE64: ${{ secrets.LINUX_GPG_PRIVATE_KEY_BASE64 }}
+                    LINUX_GPG_PASSPHRASE: ${{ secrets.LINUX_GPG_PASSPHRASE }}
+                    LINUX_GPG_KEY_ID: ${{ secrets.LINUX_GPG_KEY_ID }}
+
+            -   name: Upload Native Release Artifacts
+                shell: pwsh
+                env:
+                    GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+                    RELEASE_TAG: ${{ needs.release-please.outputs.tag_name }}
+                run: |
+                    $assets = @($env:NATIVE_ASSET)
+                    if (Test-Path "$env:NATIVE_ASSET.asc") {
+                        $assets += "$env:NATIVE_ASSET.asc"
+                    }
+                    foreach ($asset in $assets) {
+                        gh release upload $env:RELEASE_TAG "$asset" --clobber
+                    }

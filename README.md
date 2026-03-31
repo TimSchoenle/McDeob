@@ -13,7 +13,12 @@ remapped/decompiled Minecraft code.
 
 ## Requirements
 
-- Java 25+
+- Java 21+
+- GraalVM 21+ (set `GRAALVM_HOME`)
+- Native toolchain for your OS:
+  - Windows: Visual Studio Build Tools (C++ workload)
+  - macOS: Xcode Command Line Tools
+  - Linux: `gcc`, `g++`, and related build essentials
 
 ## Fork Notice
 
@@ -30,15 +35,50 @@ I don't plan to PR this to the original repo, as I have adjusted the code for my
 
 ## Running
 
-Details for installing and running **McDeob** can be found on the [**WIKI
-**](https://github.com/ShaneBeeStudios/McDeob/wiki)
+Details for installing and running **McDeob** can be found on the
+[**Wiki**](https://github.com/ShaneBeeStudios/McDeob/wiki).
+
+### CLI
+
+```bash
+./gradlew run --args="--versions"
+./gradlew run --args="--type client --version 1.21.4 --remap --decompile --zip"
+```
+
+### GUI
+
+```bash
+./gradlew run
+```
+
+### Native Build (GluonFX)
+
+Build native binary for the host OS:
+
+```bash
+./gradlew nativeBuild
+```
+
+Run native binary:
+
+```bash
+./gradlew nativeRun
+```
+
+Package installer/bundle:
+
+```bash
+./gradlew nativePackage
+```
+
+Artifacts are generated under `build/gluonfx/`.
 
 ### Note:
 
-The remapping process takes around 2 minutes (give or take). Whilst its remapping you will see the progress in the
+The remapping process takes around 2 minutes (give or take). While it is remapping you will see progress in the
 app.   
 The decompiling process takes about 3 minutes (give or take). Currently there is no progress in the app, so just wait
-til the app says its completed.    
+until the app says it is completed.    
 (These numbers are based on a test run on my Mac (MacbookPro with M1 chip), times may vary on other machines.)
 
 ### SUPER IMPORTANT NOTE
@@ -46,7 +86,7 @@ til the app says its completed.
 The files output by this app are for your own personal use only.   
 The mappings used to decompile are provided by Mojang, but come with a hefty copyright from Microsoft.   
 You can use these files personally however you see fit, but you are not permitted to distribute them, since they do
-contain proprietery Minecraft code.    
+contain proprietary Minecraft code.    
 That said, you may **NOT** upload the resulting files to something like GitHub.
 
 ## Preview

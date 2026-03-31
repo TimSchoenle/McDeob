@@ -1,17 +1,27 @@
 package de.timmi6790.launchermeta.data.release;
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import de.timmi6790.launchermeta.data.version.Version;
-import lombok.Builder;
-import lombok.Data;
-import lombok.extern.jackson.Jacksonized;
 
-@Data
-@Jacksonized
-@Builder
-@JsonIgnoreProperties(ignoreUnknown = true)
 public class ReleaseManifest {
     private final Downloads downloads;
     private final String mainClass;
-    private Version version;
+    private final Version version;
+
+    public ReleaseManifest(final Downloads downloads, final String mainClass, final Version version) {
+        this.downloads = downloads;
+        this.mainClass = mainClass;
+        this.version = version;
+    }
+
+    public Downloads getDownloads() {
+        return this.downloads;
+    }
+
+    public String getMainClass() {
+        return this.mainClass;
+    }
+
+    public Version getVersion() {
+        return this.version;
+    }
 }

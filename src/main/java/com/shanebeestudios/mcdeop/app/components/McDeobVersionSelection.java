@@ -9,7 +9,10 @@ public class McDeobVersionSelection extends ComboBox<Version> {
 
     public McDeobVersionSelection(VersionManager versionManager) {
         this.setPromptText("Select Version");
-        this.setPrefWidth(200);
+        this.setPrefWidth(280);
+        this.setMaxWidth(Double.MAX_VALUE);
+        this.setVisibleRowCount(18);
+        this.getStyleClass().add("version-selection");
         this.getItems().addAll(versionManager.getVersions());
 
         // Custom cell factory to show IDs

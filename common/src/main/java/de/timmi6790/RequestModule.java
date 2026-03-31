@@ -1,16 +1,13 @@
 package de.timmi6790;
 
-import dagger.Module;
-import dagger.Provides;
-import javax.inject.Singleton;
+import lombok.AccessLevel;
+import lombok.NoArgsConstructor;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 
-@Module
+@NoArgsConstructor(access = AccessLevel.PRIVATE)
 public class RequestModule {
-    @Provides
-    @Singleton
-    public OkHttpClient getHttpClient() {
+    public static OkHttpClient createHttpClient() {
         return new OkHttpClient.Builder()
                 .addInterceptor(chain -> {
                     final Request originalRequest = chain.request();
