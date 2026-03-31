@@ -70,8 +70,9 @@ public class ReconstructRemapper implements Remapper, Cleanup {
 
         // Work around Reconstruct task tracking deadlock in native-image worker execution.
         if (System.getProperty("org.graalvm.nativeimage.imagecode") != null) {
-            log.info("Native runtime detected, forcing Reconstruct to single-threaded mode");
-            return 1;
+            final int nativeThreads = Math.max(1, Runtime.getRuntime().availableProcessors());
+            log.info("Native runtime detected, using {} Reconstruct thread(s)", nativeThreads);
+            return nativeThreads;
         }
 
         return Math.max(1, Runtime.getRuntime().availableProcessors());
