@@ -10,7 +10,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Consumer;
 
 public final class JavaLogBridge {
-    private static final int MAX_BACKLOG_CHARS = 200_000;
+    private static final int MAX_BACKLOG_CHARS = 20_000_000;
 
     private static final List<Consumer<String>> LISTENERS = new CopyOnWriteArrayList<>();
     private static final StringBuilder BACKLOG = new StringBuilder();
