@@ -129,9 +129,6 @@ jobs:
                     if (Test-Path "$env:NATIVE_ASSET.asc") {
                         $assets += "$env:NATIVE_ASSET.asc"
                     }
-                    if (Test-Path "$env:NATIVE_ASSET.zip") {
-                        $assets += "$env:NATIVE_ASSET.zip"
-                    }
                     foreach ($asset in $assets) {
                         gh release upload $env:RELEASE_TAG "$asset" --clobber
                     }
