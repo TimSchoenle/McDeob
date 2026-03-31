@@ -1,11 +1,11 @@
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+import org.gradle.api.GradleException
 import java.awt.RenderingHints
 import java.awt.image.BufferedImage
 import java.io.ByteArrayOutputStream
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import javax.imageio.ImageIO
-import org.gradle.api.GradleException
 
 plugins {
     `java-library`
@@ -62,7 +62,10 @@ val prepareNativeIcons by tasks.registering {
     outputs.dir(macIconsetOutputDir)
 
     doLast {
-        fun writeBytesIfChanged(target: java.io.File, bytes: ByteArray) {
+        fun writeBytesIfChanged(
+            target: java.io.File,
+            bytes: ByteArray,
+        ) {
             val current = if (target.exists()) target.readBytes() else null
             if (current == null || !current.contentEquals(bytes)) {
                 target.parentFile.mkdirs()
@@ -70,7 +73,10 @@ val prepareNativeIcons by tasks.registering {
             }
         }
 
-        fun scale(source: BufferedImage, size: Int): BufferedImage {
+        fun scale(
+            source: BufferedImage,
+            size: Int,
+        ): BufferedImage {
             val image = BufferedImage(size, size, BufferedImage.TYPE_INT_ARGB)
             val graphics = image.createGraphics()
             graphics.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC)
@@ -87,56 +93,61 @@ val prepareNativeIcons by tasks.registering {
         }
         val source = ImageIO.read(sourceFile) ?: throw GradleException("Could not read ${sourceFile.path}")
 
-        val macIcons = listOf(
-            "icon_16@1x.png" to 16,
-            "icon_16@2x.png" to 32,
-            "icon_32@1x.png" to 32,
-            "icon_32@2x.png" to 64,
-            "icon_128@1x.png" to 128,
-            "icon_128@2x.png" to 256,
-            "icon_256@1x.png" to 256,
-            "icon_256@2x.png" to 512,
-            "icon_512@1x.png" to 512,
-            "icon_512@2x.png" to 1024,
-        )
+        val macIcons =
+            listOf(
+                "icon_16@1x.png" to 16,
+                "icon_16@2x.png" to 32,
+                "icon_32@1x.png" to 32,
+                "icon_32@2x.png" to 64,
+                "icon_128@1x.png" to 128,
+                "icon_128@2x.png" to 256,
+                "icon_256@1x.png" to 256,
+                "icon_256@2x.png" to 512,
+                "icon_512@1x.png" to 512,
+                "icon_512@2x.png" to 1024,
+            )
 
         val iconsetDir = macIconsetOutputDir.asFile
         iconsetDir.mkdirs()
         macIcons.forEach { (name, size) ->
-            val bytes = ByteArrayOutputStream().use { output ->
-                ImageIO.write(scale(source, size), "png", output)
-                output.toByteArray()
-            }
+            val bytes =
+                ByteArrayOutputStream().use { output ->
+                    ImageIO.write(scale(source, size), "png", output)
+                    output.toByteArray()
+                }
             writeBytesIfChanged(iconsetDir.resolve(name), bytes)
         }
 
-        val windowsPng = ByteArrayOutputStream().use { output ->
-            ImageIO.write(scale(source, 256), "png", output)
-            output.toByteArray()
-        }
-        val iconDirSize = 6 + 16
-        val header = ByteBuffer.allocate(iconDirSize)
-            .order(ByteOrder.LITTLE_ENDIAN)
-            .apply {
-                putShort(0) // reserved
-                putShort(1) // image type: icon
-                putShort(1) // image count
-                put(0) // width = 256
-                put(0) // height = 256
-                put(0) // color count
-                put(0) // reserved
-                putShort(1) // color planes
-                putShort(32) // bits per pixel
-                putInt(windowsPng.size)
-                putInt(iconDirSize)
+        val windowsPng =
+            ByteArrayOutputStream().use { output ->
+                ImageIO.write(scale(source, 256), "png", output)
+                output.toByteArray()
             }
-            .array()
+        val iconDirSize = 6 + 16
+        val header =
+            ByteBuffer
+                .allocate(iconDirSize)
+                .order(ByteOrder.LITTLE_ENDIAN)
+                .apply {
+                    putShort(0) // reserved
+                    putShort(1) // image type: icon
+                    putShort(1) // image count
+                    put(0) // width = 256
+                    put(0) // height = 256
+                    put(0) // color count
+                    put(0) // reserved
+                    putShort(1) // color planes
+                    putShort(32) // bits per pixel
+                    putInt(windowsPng.size)
+                    putInt(iconDirSize)
+                }.array()
 
         writeBytesIfChanged(windowsIconOutput.asFile, header + windowsPng)
     }
 }
 
-tasks.matching { it.name in setOf("nativeBuild", "nativePackage", "nativeRun", "nativeCompile", "nativeLink") }
+tasks
+    .matching { it.name in setOf("nativeBuild", "nativePackage", "nativeRun", "nativeCompile", "nativeLink") }
     .configureEach {
         dependsOn(prepareNativeIcons)
     }

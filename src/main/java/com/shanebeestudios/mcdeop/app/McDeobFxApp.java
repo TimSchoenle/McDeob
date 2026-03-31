@@ -23,8 +23,8 @@ import javafx.application.Platform;
 import javafx.concurrent.Task;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.Scene;
 import javafx.scene.Node;
+import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.image.Image;
@@ -100,7 +100,8 @@ public class McDeobFxApp extends Application {
         final VBox controlsCard = new VBox(14);
         controlsCard.setFillWidth(true);
         controlsCard.getStyleClass().add("panel-card");
-        controlsCard.getChildren()
+        controlsCard
+                .getChildren()
                 .addAll(
                         this.createFieldRow("Target", this.typeSelection),
                         this.createFieldRow("Minecraft Version", this.versionSelection),
