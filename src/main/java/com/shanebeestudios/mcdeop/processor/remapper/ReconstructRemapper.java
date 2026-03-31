@@ -8,7 +8,6 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.nio.file.Path;
 import java.util.Set;
-import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -17,22 +16,25 @@ public class ReconstructRemapper implements Remapper, Cleanup {
      * {@link Reconstruct} breaks if you run it multiple times because all the transformers are cached with the first config every initialized.
      * This is a nasty hack to clear the static fields in {@link TransformerManager} so that we can run it multiple times.
      */
-    @SneakyThrows
     private void fixReconstruct() {
         log.debug("Fix Reconstruct");
-        final Class<TransformerManager> affectedClass = TransformerManager.class;
-        final Field[] declaredFields = affectedClass.getDeclaredFields();
-        for (final Field field : declaredFields) {
-            if (!Modifier.isStatic(field.getModifiers())) {
-                continue;
-            }
+        try {
+            final Class<TransformerManager> affectedClass = TransformerManager.class;
+            final Field[] declaredFields = affectedClass.getDeclaredFields();
+            for (final Field field : declaredFields) {
+                if (!Modifier.isStatic(field.getModifiers())) {
+                    continue;
+                }
 
-            field.setAccessible(true);
-            final Object fieldObject = field.get(affectedClass);
-            if (fieldObject instanceof Set) {
-                log.debug("Clear Set field in Reconstruct: {}", field.getName());
-                ((Set<?>) fieldObject).clear();
+                field.setAccessible(true);
+                final Object fieldObject = field.get(null);
+                if (fieldObject instanceof Set) {
+                    log.debug("Clear Set field in Reconstruct: {}", field.getName());
+                    ((Set<?>) fieldObject).clear();
+                }
             }
+        } catch (final ReflectiveOperationException exception) {
+            log.warn("Failed to reset Reconstruct transformer caches", exception);
         }
     }
 
