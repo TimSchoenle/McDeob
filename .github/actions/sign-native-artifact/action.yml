@@ -21,5 +21,5 @@ runs:
             run: |
                 cosign sign-blob --yes \
                   --key env://COSIGN_PRIVATE_KEY \
-                  --output-signature "${NATIVE_ASSET}.sig" \
+                  --bundle "${NATIVE_ASSET}.sigstore.json" \
                   "$NATIVE_ASSET"

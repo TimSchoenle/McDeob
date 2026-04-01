@@ -123,5 +123,5 @@ jobs:
                     name: McDeob-Native-${{ runner.os }}-${{ runner.arch }}
                     path: |
                         ${{ steps.native_build.outputs.native_asset }}
-                        ${{ steps.native_build.outputs.native_asset }}.sig
+                        ${{ steps.native_build.outputs.native_asset }}.sigstore.json
                     if-no-files-found: error

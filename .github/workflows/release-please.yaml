@@ -115,10 +115,11 @@ jobs:
                 env:
                     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
                     RELEASE_TAG: ${{ needs.release-please.outputs.tag_name }}
+                    NATIVE_ASSET: ${{ steps.native_build.outputs.native_asset }}
                 run: |
                     $assets = @($env:NATIVE_ASSET)
-                    if (Test-Path "$env:NATIVE_ASSET.sig") {
-                        $assets += "$env:NATIVE_ASSET.sig"
+                    if (Test-Path "$env:NATIVE_ASSET.sigstore.json") {
+                        $assets += "$env:NATIVE_ASSET.sigstore.json"
                     }
                     foreach ($asset in $assets) {
                         gh release upload $env:RELEASE_TAG "$asset" --clobber
