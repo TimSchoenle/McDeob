@@ -66,6 +66,7 @@ runs:
             run: ./gradlew --stop || true
 
         -   name: Stage native executable (Windows)
+            id: stage_windows
             if: runner.os == 'Windows'
             shell: pwsh
             run: |
@@ -81,9 +82,10 @@ runs:
                 $arch = $env:RUNNER_ARCH.ToLowerInvariant()
                 $dest = Join-Path $env:RUNNER_TEMP "McDeob-windows-$arch.exe"
                 Copy-Item -Path $exe.FullName -Destination $dest -Force
-                "NATIVE_ASSET=$dest" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+                "path=$dest" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
 
         -   name: Stage native executable (Linux/macOS)
+            id: stage_unix
             if: runner.os != 'Windows'
             shell: bash
             run: |
@@ -101,13 +103,17 @@ runs:
                 dest="$RUNNER_TEMP/McDeob-${os_name}-${arch}"
                 cp "$candidate" "$dest"
                 chmod +x "$dest"
-                echo "NATIVE_ASSET=$dest" >> "$GITHUB_ENV"
+                echo "path=$dest" >> "$GITHUB_OUTPUT"
 
         -   name: Resolve native artifact path
             id: native_asset
             shell: pwsh
+            env:
+                WINDOWS_PATH: ${{ steps.stage_windows.outputs.path }}
+                UNIX_PATH: ${{ steps.stage_unix.outputs.path }}
             run: |
-                if (-not $env:NATIVE_ASSET) {
+                $assetPath = if ($env:WINDOWS_PATH) { $env:WINDOWS_PATH } else { $env:UNIX_PATH }
+                if (-not $assetPath) {
                     throw "NATIVE_ASSET was not set by the staging step"
                 }
-                "path=$env:NATIVE_ASSET" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+                "path=$assetPath" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
