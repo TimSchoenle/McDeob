@@ -84,6 +84,7 @@ jobs:
 
     native:
         name: Native(${{ matrix.os }})
+        environment: native-test
         needs: [ build ]
         strategy:
             fail-fast: false

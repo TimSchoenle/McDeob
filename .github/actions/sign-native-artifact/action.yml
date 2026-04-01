@@ -2,109 +2,111 @@ name: "Sign Native Artifact"
 description: "Optionally or strictly sign native artifacts depending on runner OS and configured credentials"
 
 inputs:
-  native_asset:
-    description: "Absolute path to the staged native executable"
-    required: true
-  require_signing:
-    description: "Fail when required signing credentials for the current runner OS are missing"
-    required: false
-    default: "false"
+    native_asset:
+        description: "Absolute path to the staged native executable"
+        required: true
+    require_signing:
+        description: "Fail when required signing credentials for the current runner OS are missing"
+        required: false
+        default: "false"
 
 runs:
-  using: "composite"
-  steps:
-    - name: Export native artifact path
-      shell: pwsh
-      run: |
-        "NATIVE_ASSET=${{ inputs.native_asset }}" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+    using: "composite"
+    steps:
+        -   name: Export native artifact path
+            shell: pwsh
+            env:
+                INPUT_NATIVE_ASSET: ${{ inputs.native_asset }}
+            run: |
+                "NATIVE_ASSET=$INPUT_NATIVE_ASSET" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
 
-    - name: Evaluate signing credentials
-      id: signing
-      shell: pwsh
-      env:
-        REQUIRE_SIGNING: ${{ inputs.require_signing }}
-      run: |
-        $requireSigning = "$env:REQUIRE_SIGNING".ToLowerInvariant() -eq "true"
-        $windowsSign = [bool]($env:WINDOWS_SIGN_CERT_BASE64 -and $env:WINDOWS_SIGN_CERT_PASSWORD)
-        $macosSign = [bool]($env:MACOS_SIGN_CERT_BASE64 -and $env:MACOS_SIGN_CERT_PASSWORD -and $env:MACOS_SIGN_IDENTITY)
-        $macosNotary = [bool]($env:MACOS_NOTARY_APPLE_ID -and $env:MACOS_NOTARY_TEAM_ID -and $env:MACOS_NOTARY_APP_PASSWORD)
-        $linuxSign = [bool]($env:LINUX_GPG_PRIVATE_KEY_BASE64 -and $env:LINUX_GPG_PASSPHRASE)
-
-        if ($requireSigning) {
-            switch ($env:RUNNER_OS) {
-                "Windows" {
-                    if (-not $windowsSign) {
-                        throw "Missing Windows signing secrets: WINDOWS_SIGN_CERT_BASE64 and WINDOWS_SIGN_CERT_PASSWORD"
+        -   name: Evaluate signing credentials
+            id: signing
+            shell: pwsh
+            env:
+                REQUIRE_SIGNING: ${{ inputs.require_signing }}
+            run: |
+                $requireSigning = "$env:REQUIRE_SIGNING".ToLowerInvariant() -eq "true"
+                $windowsSign = [bool]($env:WINDOWS_SIGN_CERT_BASE64 -and $env:WINDOWS_SIGN_CERT_PASSWORD)
+                $macosSign = [bool]($env:MACOS_SIGN_CERT_BASE64 -and $env:MACOS_SIGN_CERT_PASSWORD -and $env:MACOS_SIGN_IDENTITY)
+                $macosNotary = [bool]($env:MACOS_NOTARY_APPLE_ID -and $env:MACOS_NOTARY_TEAM_ID -and $env:MACOS_NOTARY_APP_PASSWORD)
+                $linuxSign = [bool]($env:LINUX_GPG_PRIVATE_KEY_BASE64 -and $env:LINUX_GPG_PASSPHRASE)
+                
+                if ($requireSigning) {
+                    switch ($env:RUNNER_OS) {
+                        "Windows" {
+                            if (-not $windowsSign) {
+                                throw "Missing Windows signing secrets: WINDOWS_SIGN_CERT_BASE64 and WINDOWS_SIGN_CERT_PASSWORD"
+                            }
+                        }
+                        "macOS" {
+                            if (-not $macosSign) {
+                                throw "Missing macOS signing secrets: MACOS_SIGN_CERT_BASE64, MACOS_SIGN_CERT_PASSWORD and MACOS_SIGN_IDENTITY"
+                            }
+                        }
+                        "Linux" {
+                            if (-not $linuxSign) {
+                                throw "Missing Linux signing secrets: LINUX_GPG_PRIVATE_KEY_BASE64 and LINUX_GPG_PASSPHRASE"
+                            }
+                        }
                     }
                 }
-                "macOS" {
-                    if (-not $macosSign) {
-                        throw "Missing macOS signing secrets: MACOS_SIGN_CERT_BASE64, MACOS_SIGN_CERT_PASSWORD and MACOS_SIGN_IDENTITY"
-                    }
-                }
-                "Linux" {
-                    if (-not $linuxSign) {
-                        throw "Missing Linux signing secrets: LINUX_GPG_PRIVATE_KEY_BASE64 and LINUX_GPG_PASSPHRASE"
-                    }
-                }
-            }
-        }
+                
+                "windows=$($windowsSign.ToString().ToLowerInvariant())" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+                "macos=$($macosSign.ToString().ToLowerInvariant())" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+                "macos_notary=$($macosNotary.ToString().ToLowerInvariant())" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+                "linux=$($linuxSign.ToString().ToLowerInvariant())" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
 
-        "windows=$($windowsSign.ToString().ToLowerInvariant())" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
-        "macos=$($macosSign.ToString().ToLowerInvariant())" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
-        "macos_notary=$($macosNotary.ToString().ToLowerInvariant())" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
-        "linux=$($linuxSign.ToString().ToLowerInvariant())" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
+        -   name: Sign native executable (Windows)
+            if: runner.os == 'Windows' && steps.signing.outputs.windows == 'true'
+            shell: pwsh
+            run: |
+                $certPath = Join-Path $env:RUNNER_TEMP "windows-signing-cert.pfx"
+                [System.IO.File]::WriteAllBytes($certPath, [System.Convert]::FromBase64String($env:WINDOWS_SIGN_CERT_BASE64))
+                signtool sign /fd SHA256 /f $certPath /p $env:WINDOWS_SIGN_CERT_PASSWORD /tr http://timestamp.digicert.com /td SHA256 $env:NATIVE_ASSET
 
-    - name: Sign native executable (Windows)
-      if: runner.os == 'Windows' && steps.signing.outputs.windows == 'true'
-      shell: pwsh
-      run: |
-        $certPath = Join-Path $env:RUNNER_TEMP "windows-signing-cert.pfx"
-        [System.IO.File]::WriteAllBytes($certPath, [System.Convert]::FromBase64String($env:WINDOWS_SIGN_CERT_BASE64))
-        signtool sign /fd SHA256 /f $certPath /p $env:WINDOWS_SIGN_CERT_PASSWORD /tr http://timestamp.digicert.com /td SHA256 $env:NATIVE_ASSET
+        -   name: Sign native executable (macOS)
+            if: runner.os == 'macOS' && steps.signing.outputs.macos == 'true'
+            shell: bash
+            run: |
+                CERT_PATH="$RUNNER_TEMP/macos-signing-cert.p12"
+                KEYCHAIN_PATH="$RUNNER_TEMP/mcdeob-signing.keychain-db"
+                KEYCHAIN_PASSWORD="$(openssl rand -hex 12)"
+                echo "$MACOS_SIGN_CERT_BASE64" | openssl base64 -d -A > "$CERT_PATH"
+                security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+                security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
+                security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+                security import "$CERT_PATH" -P "$MACOS_SIGN_CERT_PASSWORD" -A -t cert -f pkcs12 -k "$KEYCHAIN_PATH"
+                security list-keychains -d user -s "$KEYCHAIN_PATH"
+                security set-key-partition-list -S apple-tool:,apple: -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+                codesign --force --options runtime --timestamp --sign "$MACOS_SIGN_IDENTITY" "$NATIVE_ASSET"
+                codesign --verify --strict --verbose=2 "$NATIVE_ASSET"
 
-    - name: Sign native executable (macOS)
-      if: runner.os == 'macOS' && steps.signing.outputs.macos == 'true'
-      shell: bash
-      run: |
-        CERT_PATH="$RUNNER_TEMP/macos-signing-cert.p12"
-        KEYCHAIN_PATH="$RUNNER_TEMP/mcdeob-signing.keychain-db"
-        KEYCHAIN_PASSWORD="$(openssl rand -hex 12)"
-        echo "$MACOS_SIGN_CERT_BASE64" | openssl base64 -d -A > "$CERT_PATH"
-        security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
-        security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
-        security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
-        security import "$CERT_PATH" -P "$MACOS_SIGN_CERT_PASSWORD" -A -t cert -f pkcs12 -k "$KEYCHAIN_PATH"
-        security list-keychains -d user -s "$KEYCHAIN_PATH"
-        security set-key-partition-list -S apple-tool:,apple: -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
-        codesign --force --options runtime --timestamp --sign "$MACOS_SIGN_IDENTITY" "$NATIVE_ASSET"
-        codesign --verify --strict --verbose=2 "$NATIVE_ASSET"
+        -   name: Notarize macOS binary
+            if: runner.os == 'macOS' && steps.signing.outputs.macos == 'true' && steps.signing.outputs.macos_notary == 'true'
+            shell: bash
+            run: |
+                zip_path="${NATIVE_ASSET}.zip"
+                ditto -c -k --keepParent "$NATIVE_ASSET" "$zip_path"
+                xcrun notarytool submit "$zip_path" \
+                  --apple-id "$MACOS_NOTARY_APPLE_ID" \
+                  --team-id "$MACOS_NOTARY_TEAM_ID" \
+                  --password "$MACOS_NOTARY_APP_PASSWORD" \
+                  --wait
 
-    - name: Notarize macOS binary
-      if: runner.os == 'macOS' && steps.signing.outputs.macos == 'true' && steps.signing.outputs.macos_notary == 'true'
-      shell: bash
-      run: |
-        zip_path="${NATIVE_ASSET}.zip"
-        ditto -c -k --keepParent "$NATIVE_ASSET" "$zip_path"
-        xcrun notarytool submit "$zip_path" \
-          --apple-id "$MACOS_NOTARY_APPLE_ID" \
-          --team-id "$MACOS_NOTARY_TEAM_ID" \
-          --password "$MACOS_NOTARY_APP_PASSWORD" \
-          --wait
-
-    - name: Sign native executable (Linux)
-      if: runner.os == 'Linux' && steps.signing.outputs.linux == 'true'
-      shell: bash
-      run: |
-        export GNUPGHOME="$RUNNER_TEMP/gnupg"
-        mkdir -p "$GNUPGHOME"
-        chmod 700 "$GNUPGHOME"
-        echo "$LINUX_GPG_PRIVATE_KEY_BASE64" | base64 --decode | gpg --batch --import
-        if [ -n "$LINUX_GPG_KEY_ID" ]; then
-          signer=(--local-user "$LINUX_GPG_KEY_ID")
-        else
-          signer=()
-        fi
-        gpg --batch --yes --pinentry-mode loopback --passphrase "$LINUX_GPG_PASSPHRASE" \
-          "${signer[@]}" \
-          --armor --detach-sign --output "${NATIVE_ASSET}.asc" "$NATIVE_ASSET"
+        -   name: Sign native executable (Linux)
+            if: runner.os == 'Linux' && steps.signing.outputs.linux == 'true'
+            shell: bash
+            run: |
+                export GNUPGHOME="$RUNNER_TEMP/gnupg"
+                mkdir -p "$GNUPGHOME"
+                chmod 700 "$GNUPGHOME"
+                echo "$LINUX_GPG_PRIVATE_KEY_BASE64" | base64 --decode | gpg --batch --import
+                if [ -n "$LINUX_GPG_KEY_ID" ]; then
+                  signer=(--local-user "$LINUX_GPG_KEY_ID")
+                else
+                  signer=()
+                fi
+                gpg --batch --yes --pinentry-mode loopback --passphrase "$LINUX_GPG_PASSPHRASE" \
+                  "${signer[@]}" \
+                  --armor --detach-sign --output "${NATIVE_ASSET}.asc" "$NATIVE_ASSET"

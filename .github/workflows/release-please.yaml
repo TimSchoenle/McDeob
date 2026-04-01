@@ -77,6 +77,7 @@ jobs:
 
     native-artifacts:
         name: Release Native(${{ matrix.os }})
+        environment: release
         needs: release-please
         runs-on: ${{ matrix.os }}
         if: ${{ needs.release-please.outputs.release_created }}
