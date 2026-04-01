@@ -85,14 +85,14 @@ jobs:
     native:
         name: Native(${{ matrix.os }})
         environment: native-test
-        needs: [ build ]
+        needs: [ test ]
         strategy:
             fail-fast: false
             matrix:
                 os: [ ubuntu-latest, windows-latest, macos-latest ]
         runs-on: ${{ matrix.os }}
         permissions:
-            contents: read
+            contents: read # to read code
         steps:
             -   name: Harden Runner
                 uses: step-security/harden-runner@fa2e9d605c4eeb9fcad4c99c224cee0c6c7f3594 # v2.16.0
