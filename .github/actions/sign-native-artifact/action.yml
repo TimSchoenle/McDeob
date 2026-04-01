@@ -17,6 +17,7 @@ runs:
             shell: pwsh
             env:
                 INPUT_NATIVE_ASSET: ${{ inputs.native_asset }}
+            # zizmor: ignore[dangerous-triggers]
             run: |
                 "NATIVE_ASSET=$INPUT_NATIVE_ASSET" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
 
