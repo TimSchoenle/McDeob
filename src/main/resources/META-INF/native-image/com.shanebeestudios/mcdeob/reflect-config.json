@@ -18,5 +18,9 @@
   {
     "name": "io.github.lxgaming.reconstruct.common.transformer.rename.RenameTransformer",
     "allDeclaredConstructors": true
+  },
+  {
+    "name": "jadx.plugins.input.java.JavaInputPlugin",
+    "allDeclaredConstructors": true
   }
 ]

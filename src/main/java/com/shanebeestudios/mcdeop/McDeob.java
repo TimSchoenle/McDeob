@@ -28,7 +28,9 @@ public class McDeob {
             return;
         }
 
-        final int exitCode = new CommandLine(new McDeobCommand(versionManager)).execute(args);
+        final CommandLine commandLine = new CommandLine(new McDeobCommand(versionManager));
+        commandLine.setCaseInsensitiveEnumValuesAllowed(true);
+        final int exitCode = commandLine.execute(args);
         System.exit(exitCode);
     }
 }

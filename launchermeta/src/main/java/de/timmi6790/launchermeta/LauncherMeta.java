@@ -119,7 +119,9 @@ public class LauncherMeta {
     }
 
     private Library mapLibrary(final JsonNode node) throws MalformedURLException {
-        return new Library(node.path("name").asText(null), this.mapLibraryArtifact(node.path("downloads").path("artifact")));
+        return new Library(
+                node.path("name").asText(null),
+                this.mapLibraryArtifact(node.path("downloads").path("artifact")));
     }
 
     private LibraryArtifact mapLibraryArtifact(final JsonNode node) throws MalformedURLException {
@@ -145,8 +147,7 @@ public class LauncherMeta {
         }
 
         final JsonNode majorVersionNode = node.path("majorVersion");
-        final Integer majorVersion =
-                majorVersionNode.isInt() ? majorVersionNode.asInt() : null;
+        final Integer majorVersion = majorVersionNode.isInt() ? majorVersionNode.asInt() : null;
         return new JavaVersion(node.path("component").asText(null), majorVersion);
     }
 

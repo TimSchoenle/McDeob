@@ -1,7 +1,7 @@
 package com.shanebeestudios.mcdeop.processor;
 
 import com.shanebeestudios.mcdeop.processor.decompiler.Decompiler;
-import com.shanebeestudios.mcdeop.processor.decompiler.VineflowerDecompiler;
+import com.shanebeestudios.mcdeop.processor.decompiler.DecompilerType;
 import com.shanebeestudios.mcdeop.processor.remapper.ReconstructRemapper;
 import com.shanebeestudios.mcdeop.processor.remapper.Remapper;
 import com.shanebeestudios.mcdeop.util.DurationTracker;
@@ -19,6 +19,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionException;
+import java.util.stream.Stream;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -58,7 +59,9 @@ public class Processor {
 
         this.responseConsumer = responseConsumer;
         this.remapper = new ReconstructRemapper();
-        this.decompiler = new VineflowerDecompiler();
+        this.decompiler = Optional.ofNullable(this.options.decompilerType())
+                .orElse(DecompilerType.VINEFLOWER)
+                .createDecompiler();
         this.httpClient = RequestModule.createHttpClient();
 
         final Path dataFolderPath = this.getDataFolder();
@@ -233,7 +236,7 @@ public class Processor {
             FileUtil.remove(this.decompiledJarPath);
             Files.createDirectories(this.decompiledJarPath);
 
-            this.decompiler.decompile(jarPath, this.decompiledJarPath);
+            this.decompiler.decompile(jarPath, this.decompiledJarPath, this.resolveDecompilerLibraries());
 
             if (this.options.zipDecompileOutput()) {
                 // Pack the decompiled files into a zip file
@@ -243,6 +246,49 @@ public class Processor {
                 FileUtil.zip(this.decompiledJarPath, this.decompiledZipPath);
             }
         }
+    }
+
+    private List<Path> resolveDecompilerLibraries() throws IOException {
+        if (!this.options.downloadLibraries()) {
+            return List.of();
+        }
+        if (!this.decompiler.supportsExternalLibraries()) {
+            log.info(
+                    "{} does not support external libraries; decompiling without downloaded dependencies.",
+                    this.decompiler.getClass().getSimpleName());
+            return List.of();
+        }
+
+        final List<Path> libraries = this.getDownloadedLibraryJars();
+        if (!libraries.isEmpty()) {
+            log.info(
+                    "Passing {} downloaded libraries to {}.",
+                    libraries.size(),
+                    this.decompiler.getClass().getSimpleName());
+        } else {
+            log.warn(
+                    "No downloaded library jars found to pass to {}.",
+                    this.decompiler.getClass().getSimpleName());
+        }
+        return libraries;
+    }
+
+    private List<Path> getDownloadedLibraryJars() throws IOException {
+        if (!Files.isDirectory(this.librariesPath)) {
+            return List.of();
+        }
+
+        try (Stream<Path> files = Files.walk(this.librariesPath)) {
+            return files.filter(Files::isRegularFile)
+                    .filter(this::isLibraryJar)
+                    .sorted()
+                    .toList();
+        }
+    }
+
+    private boolean isLibraryJar(final Path path) {
+        final String fileName = path.getFileName().toString().toLowerCase(Locale.ENGLISH);
+        return fileName.endsWith(".jar") && !fileName.contains("-natives-");
     }
 
     private void downloadLibraries() throws IOException {
@@ -256,8 +302,8 @@ public class Processor {
             return;
         }
 
-        try (final DurationTracker ignored = new DurationTracker(
-                duration -> log.info("Library download completed in {}!", duration))) {
+        try (final DurationTracker ignored =
+                new DurationTracker(duration -> log.info("Library download completed in {}!", duration))) {
             this.sendNewResponse("Downloading libraries...");
             for (int i = 0; i < libraries.size(); i++) {
                 final LibraryArtifact library = libraries.get(i);
@@ -266,7 +312,8 @@ public class Processor {
 
                 final int downloaded = i + 1;
                 if (downloaded == libraries.size() || downloaded % 25 == 0) {
-                    this.sendNewResponse(String.format("Downloading libraries... (%d/%d)", downloaded, libraries.size()));
+                    this.sendNewResponse(
+                            String.format("Downloading libraries... (%d/%d)", downloaded, libraries.size()));
                 }
             }
         }
@@ -281,8 +328,8 @@ public class Processor {
             throw new IOException("Libraries directory was not found: " + this.librariesPath);
         }
 
-        try (final DurationTracker ignored = new DurationTracker(
-                duration -> log.info("Gradle project setup completed in {}!", duration))) {
+        try (final DurationTracker ignored =
+                new DurationTracker(duration -> log.info("Gradle project setup completed in {}!", duration))) {
             this.sendNewResponse("Setting up Gradle project...");
             FileUtil.remove(this.gradleProjectPath);
             Files.createDirectories(this.gradleProjectPath);
@@ -296,31 +343,27 @@ public class Processor {
                 this.request.type().name().toLowerCase(Locale.ENGLISH),
                 this.request.getVersion().id());
         final String minecraftVersion = this.request.getVersion().id();
-        final int javaVersion =
-                this.request.getJavaVersion().orElse(DEFAULT_GRADLE_JAVA_VERSION);
+        final int javaVersion = this.request.getJavaVersion().orElse(DEFAULT_GRADLE_JAVA_VERSION);
         final Optional<String> mainClass = this.request.getMainClass();
         final String escapedMainClass = mainClass.map(this::escapeKotlinString).orElse("");
         final String escapedMinecraftVersion = this.escapeKotlinString(minecraftVersion);
         final String escapedProjectName = this.escapeKotlinString(projectName);
 
-        final String settingsContent = String.format(
-                Locale.ENGLISH,
-                """
-                pluginManagement {
-                    repositories {
-                        gradlePluginPortal()
-                        mavenCentral()
+        final String settingsContent =
+                String.format(Locale.ENGLISH, """
+                    pluginManagement {
+                        repositories {
+                            gradlePluginPortal()
+                            mavenCentral()
+                        }
                     }
-                }
 
-                plugins {
-                    id("org.gradle.toolchains.foojay-resolver-convention") version "%s"
-                }
+                    plugins {
+                        id("org.gradle.toolchains.foojay-resolver-convention") version "%s"
+                    }
 
-                rootProject.name = "%s"
-                """,
-                FOOJAY_RESOLVER_PLUGIN_VERSION,
-                escapedProjectName);
+                    rootProject.name = "%s"
+                    """, FOOJAY_RESOLVER_PLUGIN_VERSION, escapedProjectName);
         final String buildContent = String.format(
                 Locale.ENGLISH,
                 """
@@ -374,36 +417,31 @@ public class Processor {
                 javaVersion,
                 javaVersion,
                 javaVersion,
-                mainClass.isPresent()
-                        ? String.format(
-                                Locale.ENGLISH,
-                                """
+                mainClass.isPresent() ? String.format(Locale.ENGLISH, """
 
-                                application {
-                                    mainClass = "%s"
-                                }
+                    application {
+                        mainClass = "%s"
+                    }
 
-                                tasks.register<JavaExec>("runMinecraft") {
-                                    group = "application"
-                                    description = "Run Minecraft main class from decompiled sources"
-                                    mainClass.set(application.mainClass)
-                                    classpath = sourceSets["main"].runtimeClasspath
-                                    workingDir = projectDir
-                                }
-                                """,
-                                escapedMainClass)
-                        : "");
+                    tasks.register<JavaExec>("runMinecraft") {
+                        group = "application"
+                        description = "Run Minecraft main class from decompiled sources"
+                        mainClass.set(application.mainClass)
+                        classpath = sourceSets["main"].runtimeClasspath
+                        workingDir = projectDir
+                    }
+                    """, escapedMainClass) : "");
         final String gradlePropertiesContent = """
-                org.gradle.jvmargs=-Xmx4G -Dfile.encoding=UTF-8
-                org.gradle.parallel=true
-                org.gradle.caching=true
-                org.gradle.java.installations.auto-download=true
-                org.gradle.java.installations.auto-detect=true
-                """;
+            org.gradle.jvmargs=-Xmx4G -Dfile.encoding=UTF-8
+            org.gradle.parallel=true
+            org.gradle.caching=true
+            org.gradle.java.installations.auto-download=true
+            org.gradle.java.installations.auto-detect=true
+            """;
         final String gitignoreContent = """
-                .gradle/
-                build/
-                """;
+            .gradle/
+            build/
+            """;
         final String readmeContent = String.format(
                 Locale.ENGLISH,
                 """

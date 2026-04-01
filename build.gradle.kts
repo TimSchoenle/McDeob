@@ -42,6 +42,8 @@ dependencies {
     implementation(project(":launchermeta", "shadow"))
     implementation(libs.reconstruct.common)
     implementation(libs.vineflower)
+    implementation(libs.jadx.core)
+    implementation(libs.jadx.java.input)
     implementation(libs.picocli)
     implementation(libs.slf4j.simple)
     implementation(libs.okhttp)
