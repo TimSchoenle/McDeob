@@ -43,7 +43,10 @@ Details for installing and running **McDeob** can be found on the
 ```bash
 ./gradlew run --args="--versions"
 ./gradlew run --args="--type client --version 1.21.4 --remap --decompile --zip"
+./gradlew run --args="--type client --version 1.21.4 --libraries --gradle-project"
 ```
+
+`--gradle-project` requires `--decompile` and `--libraries`.
 
 ### GUI
 
