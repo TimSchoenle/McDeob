@@ -61,6 +61,8 @@ runs:
         -   name: Sign native executable (Windows)
             if: runner.os == 'Windows' && steps.signing.outputs.windows == 'true'
             shell: pwsh
+            env:
+                NATIVE_ASSET: ${{ inputs.native_asset }}
             run: |
                 $certPath = Join-Path $env:RUNNER_TEMP "windows-signing-cert.pfx"
                 [System.IO.File]::WriteAllBytes($certPath, [System.Convert]::FromBase64String($env:WINDOWS_SIGN_CERT_BASE64))
@@ -69,6 +71,8 @@ runs:
         -   name: Sign native executable (macOS)
             if: runner.os == 'macOS' && steps.signing.outputs.macos == 'true'
             shell: bash
+            env:
+                NATIVE_ASSET: ${{ inputs.native_asset }}
             run: |
                 CERT_PATH="$RUNNER_TEMP/macos-signing-cert.p12"
                 KEYCHAIN_PATH="$RUNNER_TEMP/mcdeob-signing.keychain-db"
