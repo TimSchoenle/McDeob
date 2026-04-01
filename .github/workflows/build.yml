@@ -112,19 +112,9 @@ jobs:
                 uses: ./.github/actions/sign-native-artifact
                 with:
                     native_asset: ${{ steps.native_build.outputs.native_asset }}
-                    require_signing: 'false'
                 env:
-                    WINDOWS_SIGN_CERT_BASE64: ${{ secrets.WINDOWS_SIGN_CERT_BASE64 }}
-                    WINDOWS_SIGN_CERT_PASSWORD: ${{ secrets.WINDOWS_SIGN_CERT_PASSWORD }}
-                    MACOS_SIGN_CERT_BASE64: ${{ secrets.MACOS_SIGN_CERT_BASE64 }}
-                    MACOS_SIGN_CERT_PASSWORD: ${{ secrets.MACOS_SIGN_CERT_PASSWORD }}
-                    MACOS_SIGN_IDENTITY: ${{ secrets.MACOS_SIGN_IDENTITY }}
-                    MACOS_NOTARY_APPLE_ID: ${{ secrets.MACOS_NOTARY_APPLE_ID }}
-                    MACOS_NOTARY_TEAM_ID: ${{ secrets.MACOS_NOTARY_TEAM_ID }}
-                    MACOS_NOTARY_APP_PASSWORD: ${{ secrets.MACOS_NOTARY_APP_PASSWORD }}
-                    LINUX_GPG_PRIVATE_KEY_BASE64: ${{ secrets.LINUX_GPG_PRIVATE_KEY_BASE64 }}
-                    LINUX_GPG_PASSPHRASE: ${{ secrets.LINUX_GPG_PASSPHRASE }}
-                    LINUX_GPG_KEY_ID: ${{ secrets.LINUX_GPG_KEY_ID }}
+                    COSGIN_PRIVATE_KEY: ${{ secrets.COSGIN_PRIVATE_KEY }}
+                    COSGIN_PASSWORD: ${{ secrets.COSGIN_PASSWORD }}
 
             -   name: Upload Native Artifact
                 uses: actions/upload-artifact@bbbca2ddaa5d8feaa63e36b76fdaad77386f024f # v7.0.0
@@ -133,6 +123,5 @@ jobs:
                     name: McDeob-Native-${{ runner.os }}-${{ runner.arch }}
                     path: |
                         ${{ steps.native_build.outputs.native_asset }}
-                        ${{ steps.native_build.outputs.native_asset }}.asc
-                        ${{ steps.native_build.outputs.native_asset }}.zip
+                        ${{ steps.native_build.outputs.native_asset }}.sig
                     if-no-files-found: error
