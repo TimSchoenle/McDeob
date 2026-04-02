@@ -9,9 +9,12 @@ import com.shanebeestudios.mcdeop.util.FileUtil;
 import com.shanebeestudios.mcdeop.util.Util;
 import de.timmi6790.RequestModule;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Optional;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.OkHttpClient;
 import org.jetbrains.annotations.Nullable;
@@ -142,6 +145,33 @@ public class Processor {
         }
     }
 
+    private Path prepareServerJarForDecompile(final Path jarPath, final boolean remapped) throws IOException {
+        if (this.request.type() != SourceType.SERVER || remapped || this.downloadService.getMappingsUrl() != null) {
+            return jarPath;
+        }
+
+        final String version = this.request.getVersion().id();
+        final String nestedServerPath = String.format("META-INF/versions/%s/server-%s.jar", version, version);
+        try (ZipFile zipFile = new ZipFile(jarPath.toFile())) {
+            final ZipEntry nestedServerJar = zipFile.getEntry(nestedServerPath);
+            if (nestedServerJar == null) {
+                log.info(
+                        "No nested server jar found at {} in {}, continuing with downloaded jar.",
+                        nestedServerPath,
+                        jarPath.getFileName());
+                return jarPath;
+            }
+
+            this.statusReporter.send("Preparing server JAR...");
+            log.info("Extracting nested server jar {} from {}.", nestedServerPath, jarPath.getFileName());
+            FileUtil.remove(this.paths.extractedServerJar());
+            try (InputStream inputStream = zipFile.getInputStream(nestedServerJar)) {
+                Files.copy(inputStream, this.paths.extractedServerJar());
+            }
+            return this.paths.extractedServerJar();
+        }
+    }
+
     public boolean init() {
         if (!this.isValid() || !this.validateOptions()) {
             return false;
@@ -178,7 +208,9 @@ public class Processor {
             }
 
             if (this.options.decompile()) {
-                this.decompileJar(remapped ? this.paths.remappedJar() : this.paths.jarPath());
+                Path decompileJarPath = remapped ? this.paths.remappedJar() : this.paths.jarPath();
+                decompileJarPath = this.prepareServerJarForDecompile(decompileJarPath, remapped);
+                this.decompileJar(decompileJarPath);
             }
 
             if (this.options.setupGradleProject()) {
