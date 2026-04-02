@@ -240,4 +240,12 @@ buildConfig {
     useJavaOutput()
 
     buildConfigField("VERSION", provider { version.toString() })
+    buildConfigField(
+        "FOOJAY_RESOLVER_VERSION",
+        provider {
+            libs.plugins.foojay.resolver
+                .get()
+                .version.toString()
+        },
+    )
 }

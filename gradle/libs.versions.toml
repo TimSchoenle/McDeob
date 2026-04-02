@@ -14,6 +14,7 @@ shadow = "9.4.1"
 buildconfig = "6.0.9"
 javafxplugin = "0.1.0"
 gluonfx = "1.0.28"
+foojay-resolver = "1.0.0"
 
 [libraries]
 jackson-databind = { module = "com.fasterxml.jackson.core:jackson-databind", version.ref = "jacksonDatabind" }
@@ -33,3 +34,4 @@ shadow = { id = "com.gradleup.shadow", version.ref = "shadow" }
 buildconfig = { id = "com.github.gmazzo.buildconfig", version.ref = "buildconfig" }
 javafxplugin = { id = "org.openjfx.javafxplugin", version.ref = "javafxplugin" }
 gluonfx = { id = "com.gluonhq.gluonfx-gradle-plugin", version.ref = "gluonfx" }
+foojay-resolver = { id = "org.gradle.toolchains.foojay-resolver-convention", version.ref = "foojay-resolver" }
