@@ -245,7 +245,8 @@ buildConfig {
         provider {
             libs.plugins.foojay.resolver
                 .get()
-                .version.toString()
+                .version
+                .toString()
         },
     )
 }
