@@ -12,6 +12,9 @@
       },
       {
         "pattern": "images/1024\\.icns"
+      },
+      {
+        "pattern": "META-INF/services/jadx\\.api\\.plugins\\..*"
       }
     ]
   }

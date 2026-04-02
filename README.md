@@ -16,9 +16,9 @@ remapped/decompiled Minecraft code.
 - Java 21+
 - GraalVM 21+ (set `GRAALVM_HOME`)
 - Native toolchain for your OS:
-  - Windows: Visual Studio Build Tools (C++ workload)
-  - macOS: Xcode Command Line Tools
-  - Linux: `gcc`, `g++`, and related build essentials
+    - Windows: Visual Studio Build Tools (C++ workload)
+    - macOS: Xcode Command Line Tools
+    - Linux: `gcc`, `g++`, and related build essentials
 
 ## Fork Notice
 
@@ -43,7 +43,14 @@ Details for installing and running **McDeob** can be found on the
 ```bash
 ./gradlew run --args="--versions"
 ./gradlew run --args="--type client --version 1.21.4 --remap --decompile --zip"
+./gradlew run --args="--type client --version 1.21.4 --decompile --decompiler fernflower"
+./gradlew run --args="--type client --version 1.21.4 --decompile --decompiler jadx"
+./gradlew run --args="--type client --version 1.21.4 --libraries --gradle-project"
 ```
+
+`--gradle-project` requires `--decompile` and `--libraries`.
+
+`--decompiler` supports `vineflower` (default), `fernflower`, `cfr`, and `jadx`.
 
 ### GUI
 
@@ -95,14 +102,19 @@ That said, you may **NOT** upload the resulting files to something like GitHub.
 
 ## Tools
 
-This application uses 2 different tools for the processing of the jar files
+This application uses multiple tools for the processing of jar files:
 
 1) [**Reconstruct by LXGaming**](https://github.com/LXGaming/Reconstruct) = This tool remaps the Minecraft jar using
    Minecraft's mappings.
 2) [**Vineflower**](https://github.com/Vineflower/vineflower) = This tool is used to decompile the jar file (class
    files) into usable .java files.
+3) [**Fernflower profile
+   **](https://github.com/JetBrains/intellij-community/tree/master/plugins/java-decompiler/engine) =
+   Legacy decompiler-style output profile powered by the Vineflower engine.
+5) [**JADX**](https://github.com/skylot/jadx) = Additional decompiler backend with built-in deobfuscation passes.
 
 ## License
 
 This tool shades in both [**Reconstruct by LXGaming**](https://github.com/LXGaming/Reconstruct) and
-[**Vineflower**](https://github.com/Vineflower/vineflower), please see their repos for the appropriate licenses.
+[**Vineflower**](https://github.com/Vineflower/vineflower), and
+[**JADX**](https://github.com/skylot/jadx), please see their repos for the appropriate licenses.

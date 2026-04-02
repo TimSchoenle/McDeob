@@ -42,6 +42,8 @@ dependencies {
     implementation(project(":launchermeta", "shadow"))
     implementation(libs.reconstruct.common)
     implementation(libs.vineflower)
+    implementation(libs.jadx.core)
+    implementation(libs.jadx.java.input)
     implementation(libs.picocli)
     implementation(libs.slf4j.simple)
     implementation(libs.okhttp)
@@ -238,4 +240,13 @@ buildConfig {
     useJavaOutput()
 
     buildConfigField("VERSION", provider { version.toString() })
+    buildConfigField(
+        "FOOJAY_RESOLVER_VERSION",
+        provider {
+            libs.plugins.foojay.resolver
+                .get()
+                .version
+                .toString()
+        },
+    )
 }

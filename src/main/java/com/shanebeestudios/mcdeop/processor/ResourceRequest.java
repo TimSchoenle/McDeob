@@ -2,9 +2,13 @@ package com.shanebeestudios.mcdeop.processor;
 
 import de.timmi6790.launchermeta.data.release.DownloadInfo;
 import de.timmi6790.launchermeta.data.release.Downloads;
+import de.timmi6790.launchermeta.data.release.JavaVersion;
+import de.timmi6790.launchermeta.data.release.Library;
+import de.timmi6790.launchermeta.data.release.LibraryArtifact;
 import de.timmi6790.launchermeta.data.release.ReleaseManifest;
 import de.timmi6790.launchermeta.data.version.Version;
 import java.net.URL;
+import java.util.List;
 import java.util.Optional;
 
 public record ResourceRequest(ReleaseManifest manifest, SourceType type) {
@@ -28,5 +32,22 @@ public record ResourceRequest(ReleaseManifest manifest, SourceType type) {
             case SERVER -> downloads.getServerMappings().map(DownloadInfo::url);
             case CLIENT -> downloads.getClientMappings().map(DownloadInfo::url);
         };
+    }
+
+    public List<LibraryArtifact> getLibraries() {
+        return this.manifest.getLibraries().stream()
+                .map(Library::getArtifact)
+                .flatMap(Optional::stream)
+                .toList();
+    }
+
+    public Optional<String> getMainClass() {
+        return Optional.ofNullable(this.manifest.getMainClass()).filter(mainClass -> !mainClass.isBlank());
+    }
+
+    public Optional<Integer> getJavaVersion() {
+        return Optional.ofNullable(this.manifest.getJavaVersion())
+                .map(JavaVersion::majorVersion)
+                .filter(version -> version > 0);
     }
 }

@@ -5,14 +5,10 @@ import java.util.ArrayList;
 import java.util.List;
 import org.jetbrains.java.decompiler.main.decompiler.ConsoleDecompiler;
 
-public class VineflowerDecompiler implements Decompiler {
-    private static final String[] STABILITY_OPTIONS = {
-        "--ascii-strings=1", // Encode non-ASCII chars as escapes for consistent output
-        "--ternary-constant-simplification=0", // Disable extra rewrites that can produce invalid output
-        "--ternary-in-if=0", // Disable experimental ternary collapsing in if conditions
-        "--verify-merges=1", // Prefer safer variable merge reconstruction over cleaner-looking output
-        "--old-try-dedup=1", // Safer for obfuscated exception handlers
-        "--include-runtime=0" // Native image doesn't expose the jrt filesystem provider
+public class FernflowerDecompiler implements Decompiler {
+    private static final String[] LEGACY_OPTIONS = {
+        // Preserve native-image compatibility by avoiding runtime module probing.
+        "--include-runtime=0"
     };
 
     @Override
@@ -22,8 +18,8 @@ public class VineflowerDecompiler implements Decompiler {
 
     @Override
     public void decompile(final Path jarPath, final Path outputDir, final List<Path> libraries) {
-        final List<String> args = new ArrayList<>(STABILITY_OPTIONS.length + libraries.size() + 2);
-        args.addAll(List.of(STABILITY_OPTIONS));
+        final List<String> args = new ArrayList<>(LEGACY_OPTIONS.length + libraries.size() + 2);
+        args.addAll(List.of(LEGACY_OPTIONS));
         for (final Path library : libraries) {
             args.add("--add-external=" + library.toAbsolutePath());
         }

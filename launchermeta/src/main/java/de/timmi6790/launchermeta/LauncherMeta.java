@@ -5,6 +5,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.json.JsonMapper;
 import de.timmi6790.launchermeta.data.release.DownloadInfo;
 import de.timmi6790.launchermeta.data.release.Downloads;
+import de.timmi6790.launchermeta.data.release.JavaVersion;
+import de.timmi6790.launchermeta.data.release.Library;
+import de.timmi6790.launchermeta.data.release.LibraryArtifact;
 import de.timmi6790.launchermeta.data.release.ReleaseManifest;
 import de.timmi6790.launchermeta.data.version.Version;
 import de.timmi6790.launchermeta.data.version.VersionManifest;
@@ -67,7 +70,9 @@ public class LauncherMeta {
     public ReleaseManifest getReleaseManifest(final Version version) throws IOException {
         final JsonNode root = this.get(version.url());
         final Downloads downloads = this.mapDownloads(root.path("downloads"));
-        return new ReleaseManifest(downloads, root.path("mainClass").asText(null), version);
+        final List<Library> libraries = this.mapLibraries(root.path("libraries"));
+        final JavaVersion javaVersion = this.mapJavaVersion(root.path("javaVersion"));
+        return new ReleaseManifest(downloads, root.path("mainClass").asText(null), libraries, javaVersion, version);
     }
 
     private Version mapVersion(final JsonNode node) throws MalformedURLException {
@@ -99,6 +104,51 @@ public class LauncherMeta {
                 node.path("sha1").asText(null),
                 node.path("size").asLong(0L),
                 this.toUrl(node.path("url").asText()));
+    }
+
+    private List<Library> mapLibraries(final JsonNode librariesNode) throws MalformedURLException {
+        final List<Library> libraries = new ArrayList<>();
+        if (librariesNode == null || librariesNode.isMissingNode() || !librariesNode.isArray()) {
+            return libraries;
+        }
+
+        for (final JsonNode node : librariesNode) {
+            libraries.add(this.mapLibrary(node));
+        }
+        return libraries;
+    }
+
+    private Library mapLibrary(final JsonNode node) throws MalformedURLException {
+        return new Library(
+                node.path("name").asText(null),
+                this.mapLibraryArtifact(node.path("downloads").path("artifact")));
+    }
+
+    private LibraryArtifact mapLibraryArtifact(final JsonNode node) throws MalformedURLException {
+        if (node == null || node.isMissingNode() || node.isNull()) {
+            return null;
+        }
+
+        final String rawUrl = node.path("url").asText(null);
+        if (rawUrl == null || rawUrl.isBlank()) {
+            return null;
+        }
+
+        return new LibraryArtifact(
+                node.path("path").asText(null),
+                node.path("sha1").asText(null),
+                node.path("size").asLong(0L),
+                this.toUrl(rawUrl));
+    }
+
+    private JavaVersion mapJavaVersion(final JsonNode node) {
+        if (node == null || node.isMissingNode() || node.isNull()) {
+            return null;
+        }
+
+        final JsonNode majorVersionNode = node.path("majorVersion");
+        final Integer majorVersion = majorVersionNode.isInt() ? majorVersionNode.asInt() : null;
+        return new JavaVersion(node.path("component").asText(null), majorVersion);
     }
 
     private URL toUrl(final String rawUrl) throws MalformedURLException {

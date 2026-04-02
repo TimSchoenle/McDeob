@@ -1,7 +1,7 @@
 package com.shanebeestudios.mcdeop.processor;
 
 import com.shanebeestudios.mcdeop.processor.decompiler.Decompiler;
-import com.shanebeestudios.mcdeop.processor.decompiler.VineflowerDecompiler;
+import com.shanebeestudios.mcdeop.processor.decompiler.DecompilerType;
 import com.shanebeestudios.mcdeop.processor.remapper.ReconstructRemapper;
 import com.shanebeestudios.mcdeop.processor.remapper.Remapper;
 import com.shanebeestudios.mcdeop.util.DurationTracker;
@@ -9,38 +9,24 @@ import com.shanebeestudios.mcdeop.util.FileUtil;
 import com.shanebeestudios.mcdeop.util.Util;
 import de.timmi6790.RequestModule;
 import java.io.IOException;
-import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Locale;
-import java.util.Objects;
 import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionException;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.Response;
-import okio.BufferedSink;
-import okio.Okio;
 import org.jetbrains.annotations.Nullable;
 
 @Slf4j
 public class Processor {
     private final ResourceRequest request;
     private final ProcessorOptions options;
-
-    @Nullable private final ResponseConsumer responseConsumer;
-
-    private final OkHttpClient httpClient;
     private final Remapper remapper;
     private final Decompiler decompiler;
 
-    private final Path jarPath;
-    private final Path mappingsPath;
-    private final Path remappedJar;
-    private final Path decompiledJarPath;
-    private final Path decompiledZipPath;
+    private final ProcessorPaths paths;
+    private final ProcessorStatusReporter statusReporter;
+    private final ProcessorDownloadService downloadService;
+    private final GradleProjectWriter gradleProjectWriter;
 
     private Processor(
             final ResourceRequest request,
@@ -49,17 +35,17 @@ public class Processor {
         this.request = request;
         this.options = options;
 
-        this.responseConsumer = responseConsumer;
         this.remapper = new ReconstructRemapper();
-        this.decompiler = new VineflowerDecompiler();
-        this.httpClient = RequestModule.createHttpClient();
+        this.decompiler = Optional.ofNullable(this.options.decompilerType())
+                .orElse(DecompilerType.VINEFLOWER)
+                .createDecompiler();
 
-        final Path dataFolderPath = this.getDataFolder();
-        this.jarPath = dataFolderPath.resolve("source.jar");
-        this.mappingsPath = dataFolderPath.resolve("mappings.txt");
-        this.remappedJar = dataFolderPath.resolve("remapped.jar");
-        this.decompiledJarPath = dataFolderPath.resolve("decompiled");
-        this.decompiledZipPath = dataFolderPath.resolve(Path.of("decompiled.zip"));
+        this.paths = ProcessorPaths.create(request);
+        this.statusReporter = new ProcessorStatusReporter(responseConsumer);
+
+        final OkHttpClient httpClient = RequestModule.createHttpClient();
+        this.downloadService = new ProcessorDownloadService(request, httpClient, this.paths, this.statusReporter);
+        this.gradleProjectWriter = new GradleProjectWriter(request, this.paths);
     }
 
     public static boolean runProcessor(
@@ -79,118 +65,48 @@ public class Processor {
         }
     }
 
-    private Path getDataFolder() {
-        final String versionFolder = String.format(
-                "%s-%s",
-                this.request.type().name().toLowerCase(Locale.ENGLISH),
-                this.request.getVersion().id());
-        final Path folderPath = Util.getBaseDataFolder().resolve(versionFolder);
-
-        try {
-            Files.createDirectories(folderPath);
-        } catch (final IOException exception) {
-            throw new IllegalStateException("Failed to create data directory: " + folderPath, exception);
-        }
-
-        return folderPath;
-    }
-
-    private Optional<ResponseConsumer> getResponseConsumer() {
-        return Optional.ofNullable(this.responseConsumer);
-    }
-
-    private void sendNewResponse(final String statusMessage) {
-        this.getResponseConsumer().ifPresent(consumer -> consumer.onStatusUpdate(statusMessage));
-    }
-
-    private void downloadFile(final URL url, final Path path, final String fileType) throws IOException {
-        try (final DurationTracker ignored = new DurationTracker(
-                duration -> log.info("Successfully downloaded {} file in {}!", fileType, duration))) {
-            log.info("Downloading {} file from Mojang...", fileType);
-            final Request httpRequest = new Request.Builder().url(url).build();
-
-            try (final Response response = this.httpClient.newCall(httpRequest).execute()) {
-                if (response.body() == null) {
-                    throw new IOException("Response body was null");
-                }
-
-                final long length = response.body().contentLength();
-                if (Files.exists(path) && Files.size(path) == length) {
-                    log.info("Already have {}, skipping download.", path.getFileName());
-                    return;
-                }
-
-                FileUtil.remove(path);
-                try (BufferedSink sink = Okio.buffer(Okio.sink(path))) {
-                    sink.writeAll(response.body().source());
-                }
-            }
-        }
-    }
-
     private boolean isValid() {
-        if (this.getJarUrl() == null) {
+        if (this.downloadService.getJarUrl() == null) {
             log.error(
                     "Failed to find JAR URL for version {}-{}",
                     this.request.type(),
                     this.request.getVersion().id());
-            this.sendNewResponse(String.format(
+            this.statusReporter.send(String.format(
                     "Failed to find JAR URL for version %s-%s",
                     this.request.type(), this.request.getVersion().id()));
+            return false;
+        }
+        return true;
+    }
+
+    private boolean validateOptions() {
+        if (this.options.setupGradleProject() && !this.options.decompile()) {
+            log.error("Gradle project setup requires decompile to be enabled.");
+            this.statusReporter.send("Gradle setup requires decompile to be enabled.");
+            return false;
+        }
+
+        if (this.options.setupGradleProject() && !this.options.downloadLibraries()) {
+            log.error("Gradle project setup requires downloading libraries.");
+            this.statusReporter.send("Gradle setup requires library downloads.");
             return false;
         }
 
         return true;
     }
 
-    @Nullable private URL getJarUrl() {
-        return this.request.getJar().orElse(null);
-    }
-
-    @Nullable private URL getMappingsUrl() {
-        return this.request.getMappings().orElse(null);
-    }
-
-    private CompletableFuture<Void> downloadJar() {
-        final URL jarUrl = Objects.requireNonNull(this.getJarUrl(), "jar URL should be validated before download");
-        return CompletableFuture.supplyAsync(() -> {
-            try {
-                this.downloadFile(jarUrl, this.jarPath, "JAR");
-            } catch (final IOException e) {
-                throw new CompletionException(e);
-            }
-
-            return null;
-        });
-    }
-
-    private CompletableFuture<Void> downloadMappings() {
-        final URL mappingsUrl = this.getMappingsUrl();
-        if (mappingsUrl == null) {
-            return CompletableFuture.completedFuture(null);
-        }
-
-        return CompletableFuture.supplyAsync(() -> {
-            try {
-                this.downloadFile(mappingsUrl, this.mappingsPath, "mappings");
-            } catch (final IOException exception) {
-                throw new CompletionException(exception);
-            }
-
-            return null;
-        });
-    }
-
     private void remapJar() {
         try (final DurationTracker ignored =
                 new DurationTracker(duration -> log.info("Remapping completed in {}!", duration))) {
-            this.sendNewResponse("Remapping...");
+            this.statusReporter.send("Remapping...");
 
-            if (!Files.exists(this.remappedJar)) {
-                log.info("Remapping {} file...", this.jarPath.getFileName());
-                this.remapper.remap(this.jarPath, this.mappingsPath, this.remappedJar);
+            if (!Files.exists(this.paths.remappedJar())) {
+                log.info("Remapping {} file...", this.paths.jarPath().getFileName());
+                this.remapper.remap(this.paths.jarPath(), this.paths.mappingsPath(), this.paths.remappedJar());
             } else {
-                log.info("{} already remapped... skipping mapping.", this.remappedJar.getFileName());
+                log.info(
+                        "{} already remapped... skipping mapping.",
+                        this.paths.remappedJar().getFileName());
             }
         }
     }
@@ -199,43 +115,59 @@ public class Processor {
         try (final DurationTracker ignored =
                 new DurationTracker(duration -> log.info("Decompiling completed in {}!", duration))) {
             log.info("Decompiling final JAR file.");
-            this.sendNewResponse("Decompiling... This will take a while!");
+            this.statusReporter.send("Decompiling... This will take a while!");
 
-            FileUtil.remove(this.decompiledJarPath);
-            Files.createDirectories(this.decompiledJarPath);
+            FileUtil.remove(this.paths.decompiledJarPath());
+            Files.createDirectories(this.paths.decompiledJarPath());
 
-            this.decompiler.decompile(jarPath, this.decompiledJarPath);
+            this.decompiler.decompile(
+                    jarPath,
+                    this.paths.decompiledJarPath(),
+                    this.downloadService.resolveDecompilerLibraries(this.options, this.decompiler));
 
             if (this.options.zipDecompileOutput()) {
-                // Pack the decompiled files into a zip file
-                log.info("Packing decompiled files into {}", this.decompiledZipPath);
-                this.sendNewResponse("Packing decompiled files ...");
-                FileUtil.remove(this.decompiledZipPath);
-                FileUtil.zip(this.decompiledJarPath, this.decompiledZipPath);
+                log.info("Packing decompiled files into {}", this.paths.decompiledZipPath());
+                this.statusReporter.send("Packing decompiled files ...");
+                FileUtil.remove(this.paths.decompiledZipPath());
+                FileUtil.zip(this.paths.decompiledJarPath(), this.paths.decompiledZipPath());
             }
         }
     }
 
+    private void setupGradleProject() throws IOException {
+        try (final DurationTracker ignored =
+                new DurationTracker(duration -> log.info("Gradle project setup completed in {}!", duration))) {
+            this.statusReporter.send("Setting up Gradle project...");
+            this.gradleProjectWriter.setupGradleProject();
+        }
+    }
+
     public boolean init() {
-        if (!this.isValid()) {
+        if (!this.isValid() || !this.validateOptions()) {
             return false;
         }
 
         try (final DurationTracker ignored = new DurationTracker(duration -> {
             log.info("Completed in {}!", duration);
-            this.sendNewResponse(String.format("Completed in %s!", duration));
+            this.statusReporter.send(String.format("Completed in %s!", duration));
         })) {
-            // Download the JAR and mappings files
-            if (this.getMappingsUrl() != null) {
-                this.sendNewResponse("Downloading JAR & MAPPINGS...");
+            if (this.downloadService.getMappingsUrl() != null) {
+                this.statusReporter.send("Downloading JAR & MAPPINGS...");
             } else {
-                this.sendNewResponse("Downloading JAR...");
+                this.statusReporter.send("Downloading JAR...");
             }
-            CompletableFuture.allOf(this.downloadJar(), this.downloadMappings()).join();
+
+            java.util.concurrent.CompletableFuture.allOf(
+                            this.downloadService.downloadJar(), this.downloadService.downloadMappings())
+                    .join();
+
+            if (this.options.downloadLibraries()) {
+                this.downloadService.downloadLibraries();
+            }
 
             boolean remapped = false;
             if (this.options.remap()) {
-                if (this.getMappingsUrl() != null) {
+                if (this.downloadService.getMappingsUrl() != null) {
                     this.remapJar();
                     remapped = true;
                 } else {
@@ -246,7 +178,11 @@ public class Processor {
             }
 
             if (this.options.decompile()) {
-                this.decompileJar(remapped ? this.remappedJar : this.jarPath);
+                this.decompileJar(remapped ? this.paths.remappedJar() : this.paths.jarPath());
+            }
+
+            if (this.options.setupGradleProject()) {
+                this.setupGradleProject();
             }
             return true;
         } catch (final IOException e) {
@@ -259,7 +195,6 @@ public class Processor {
         if (this.remapper instanceof final Cleanup cleanup) {
             cleanup.cleanup();
         }
-
         if (this.decompiler instanceof final Cleanup cleanup) {
             cleanup.cleanup();
         }
