@@ -1,6 +1,5 @@
 package com.shanebeestudios.mcdeop.util;
 
-import lombok.extern.slf4j.Slf4j;
 import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -12,6 +11,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public final class GithubReleaseChecker {
@@ -19,6 +19,10 @@ public final class GithubReleaseChecker {
             URI.create("https://api.github.com/repos/" + GeneratedConstant.GITHUB_REPO_NAME + "/releases/latest");
     private static final Pattern TAG_NAME_PATTERN = Pattern.compile("\"tag_name\"\\s*:\\s*\"([^\"]+)\"");
     private static final Pattern HTML_URL_PATTERN = Pattern.compile("\"html_url\"\\s*:\\s*\"([^\"]+)\"");
+    private static final Pattern NAME_PATTERN = Pattern.compile("\"name\"\\s*:\\s*\"([^\"]*)\"");
+    private static final Pattern PUBLISHED_AT_PATTERN = Pattern.compile("\"published_at\"\\s*:\\s*\"([^\"]+)\"");
+    private static final Pattern BODY_PATTERN =
+            Pattern.compile("\"body\"\\s*:\\s*\"((?:\\\\.|[^\"\\\\])*)\"", Pattern.DOTALL);
     private static final Pattern NUMBER_PATTERN = Pattern.compile("\\d+");
 
     /**
@@ -30,6 +34,14 @@ public final class GithubReleaseChecker {
      * 5) Return update info only when latest > current.
      */
     public Optional<UpdateInfo> checkForUpdate(final String currentVersion) throws IOException, InterruptedException {
+        final UpdateCheckResult result = this.checkForUpdateDetailed(currentVersion);
+        return result.status() == UpdateCheckStatus.UPDATE_AVAILABLE
+                ? Optional.ofNullable(result.updateInfo())
+                : Optional.empty();
+    }
+
+    public UpdateCheckResult checkForUpdateDetailed(final String currentVersion)
+            throws IOException, InterruptedException {
         final HttpClient client = HttpClient.newBuilder()
                 .connectTimeout(Duration.ofSeconds(5))
                 .followRedirects(HttpClient.Redirect.NORMAL)
@@ -45,17 +57,26 @@ public final class GithubReleaseChecker {
 
         final HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
         if (response.statusCode() != 200) {
-            return Optional.empty();
+            return new UpdateCheckResult(
+                    UpdateCheckStatus.FAILED, null, "GitHub API returned HTTP " + response.statusCode());
         }
 
         final String body = response.body();
         final String latestTag = this.matchFirst(TAG_NAME_PATTERN, body);
-        if (latestTag == null || !this.isNewer(currentVersion, latestTag)) {
-            return Optional.empty();
+        if (latestTag == null || latestTag.isBlank()) {
+            return new UpdateCheckResult(UpdateCheckStatus.FAILED, null, "Could not parse release tag from response");
         }
 
         final String releaseUrl = this.matchFirst(HTML_URL_PATTERN, body);
-        return Optional.of(new UpdateInfo(latestTag, releaseUrl));
+        final String releaseName = this.matchFirst(NAME_PATTERN, body);
+        final String publishedAt = this.matchFirst(PUBLISHED_AT_PATTERN, body);
+        final String releaseBodyRaw = this.matchFirst(BODY_PATTERN, body);
+        final String releaseBody = releaseBodyRaw != null ? this.unescapeJsonString(releaseBodyRaw) : null;
+        final UpdateInfo info = new UpdateInfo(latestTag, releaseUrl, releaseName, publishedAt, releaseBody);
+        if (this.isNewer(currentVersion, latestTag)) {
+            return new UpdateCheckResult(UpdateCheckStatus.UPDATE_AVAILABLE, info, null);
+        }
+        return new UpdateCheckResult(UpdateCheckStatus.UP_TO_DATE, info, null);
     }
 
     private String matchFirst(final Pattern pattern, final String value) {
@@ -104,5 +125,69 @@ public final class GithubReleaseChecker {
         return parts;
     }
 
-    public record UpdateInfo(String latestTag, String releaseUrl) {}
+    private String unescapeJsonString(final String value) {
+        if (value == null) {
+            return null;
+        }
+        final StringBuilder out = new StringBuilder(value.length());
+        for (int i = 0; i < value.length(); i++) {
+            final char current = value.charAt(i);
+            if (current != '\\' || i + 1 >= value.length()) {
+                out.append(current);
+                continue;
+            }
+            final char next = value.charAt(++i);
+            switch (next) {
+                case '"':
+                case '\\':
+                case '/':
+                    out.append(next);
+                    break;
+                case 'b':
+                    out.append('\b');
+                    break;
+                case 'f':
+                    out.append('\f');
+                    break;
+                case 'n':
+                    out.append('\n');
+                    break;
+                case 'r':
+                    out.append('\r');
+                    break;
+                case 't':
+                    out.append('\t');
+                    break;
+                case 'u':
+                    if (i + 4 < value.length()) {
+                        final String hex = value.substring(i + 1, i + 5);
+                        try {
+                            out.append((char) Integer.parseInt(hex, 16));
+                            i += 4;
+                        } catch (final NumberFormatException ignored) {
+                            out.append("\\u").append(hex);
+                            i += 4;
+                        }
+                    } else {
+                        out.append("\\u");
+                    }
+                    break;
+                default:
+                    out.append(next);
+                    break;
+            }
+        }
+        return out.toString();
+    }
+
+    public enum UpdateCheckStatus {
+        UPDATE_AVAILABLE,
+        UP_TO_DATE,
+        FAILED
+    }
+
+    public record UpdateCheckResult(UpdateCheckStatus status, UpdateInfo updateInfo, String errorMessage) {}
+
+    public record UpdateInfo(
+            String latestTag, String releaseUrl, String releaseName, String publishedAt, String releaseBody) {}
 }

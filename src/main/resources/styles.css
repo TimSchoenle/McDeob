@@ -21,6 +21,16 @@
     -fx-background-color: transparent;
 }
 
+.app-scroll {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-fit-to-width: true;
+}
+
+.app-scroll > .viewport {
+    -fx-background-color: transparent;
+}
+
 .label {
     -fx-text-fill: -mc-ink;
 }
@@ -290,9 +300,132 @@
 }
 
 .update-icon-button {
-    -fx-text-fill: #0b5f58;
-    -fx-border-color: #7eb9ae;
-    -fx-background-color: #e4f4f0;
+    -fx-text-fill: #125d7b;
+    -fx-border-color: #8eb8d1;
+    -fx-background-color: #e8f3fb;
+}
+
+.update-notification {
+    -fx-spacing: 10;
+    -fx-padding: 12 14;
+}
+
+.update-top-row {
+    -fx-alignment: center-left;
+}
+
+.update-badge {
+    -fx-font-size: 11px;
+    -fx-font-weight: 800;
+    -fx-padding: 3 8;
+    -fx-background-radius: 999;
+}
+
+.update-title {
+    -fx-font-size: 15px;
+    -fx-font-weight: 800;
+    -fx-text-fill: #17334a;
+}
+
+.update-detail {
+    -fx-font-size: 13px;
+    -fx-text-fill: #37546b;
+}
+
+.update-actions {
+    -fx-alignment: center-left;
+}
+
+.update-action-button {
+    -fx-padding: 6 12;
+    -fx-background-radius: 9;
+    -fx-border-radius: 9;
+}
+
+.update-action-primary {
+    -fx-text-fill: white;
+    -fx-background-color: linear-gradient(to bottom, #1578a6, #115f84);
+    -fx-border-color: transparent;
+}
+
+.update-action-primary:hover {
+    -fx-background-color: linear-gradient(to bottom, #1a87ba, #136c93);
+}
+
+.update-action-primary:pressed {
+    -fx-background-color: linear-gradient(to bottom, #146b94, #0f5675);
+}
+
+.update-changelog-box {
+    -fx-background-color: rgba(255, 255, 255, 0.5);
+    -fx-background-radius: 10;
+    -fx-border-color: rgba(109, 141, 167, 0.65);
+    -fx-border-radius: 10;
+    -fx-padding: 8;
+}
+
+.update-changelog-scroll {
+    -fx-background-color: transparent;
+    -fx-border-color: rgba(109, 141, 167, 0.65);
+    -fx-border-radius: 9;
+    -fx-background-radius: 9;
+}
+
+.update-changelog-scroll .viewport {
+    -fx-background-color: rgba(255, 255, 255, 0.55);
+}
+
+.update-changelog-full {
+    -fx-font-size: 12px;
+    -fx-text-fill: #1e3950;
+    -fx-padding: 8;
+}
+
+.update-changelog-toggle {
+    -fx-padding: 5 10;
+    -fx-font-size: 12px;
+    -fx-background-radius: 8;
+    -fx-border-radius: 8;
+}
+
+.update-state-checking {
+    -fx-background-color: #f3f8ff;
+    -fx-border-color: #9bb9db;
+}
+
+.update-state-checking .update-badge {
+    -fx-background-color: #d8e8fa;
+    -fx-text-fill: #17506e;
+}
+
+.update-state-up-to-date {
+    -fx-background-color: #eaf7f2;
+    -fx-border-color: #95cbbf;
+}
+
+.update-state-up-to-date .update-badge {
+    -fx-background-color: #cceadf;
+    -fx-text-fill: #0f5f58;
+}
+
+.update-state-available {
+    -fx-background-color: #fff5e7;
+    -fx-border-color: #e1b36c;
+}
+
+.update-state-available .update-badge {
+    -fx-background-color: #ffdca6;
+    -fx-text-fill: #7b4a00;
+}
+
+.update-state-failed {
+    -fx-background-color: #ffefef;
+    -fx-border-color: #de7676;
+}
+
+.update-state-failed .update-badge {
+    -fx-background-color: #f7c6c6;
+    -fx-text-fill: #8b2b2b;
 }
 
 .text-field {

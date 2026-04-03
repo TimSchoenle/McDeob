@@ -6,6 +6,7 @@ import com.shanebeestudios.mcdeop.app.components.McDeobOptionsPanel;
 import com.shanebeestudios.mcdeop.app.components.McDeobStatusBox;
 import com.shanebeestudios.mcdeop.app.components.McDeobTitle;
 import com.shanebeestudios.mcdeop.app.components.McDeobTypeSelection;
+import com.shanebeestudios.mcdeop.app.components.McDeobUpdateNotification;
 import com.shanebeestudios.mcdeop.app.components.McDeobVersionSelection;
 import com.shanebeestudios.mcdeop.processor.Processor;
 import com.shanebeestudios.mcdeop.processor.ResourceRequest;
@@ -14,8 +15,9 @@ import com.shanebeestudios.mcdeop.util.GithubReleaseChecker;
 import de.timmi6790.launchermeta.data.release.ReleaseManifest;
 import de.timmi6790.launchermeta.data.version.Version;
 import java.io.InputStream;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Objects;
-import java.util.Optional;
 import javafx.animation.FadeTransition;
 import javafx.animation.TranslateTransition;
 import javafx.application.Application;
@@ -27,6 +29,7 @@ import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.image.Image;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
@@ -39,6 +42,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class McDeobFxApp extends Application {
     private static final String GITHUB_RELEASES_URL = GeneratedConstant.GITHUB_REPO_URL + "/releases/latest";
+    private static final DateTimeFormatter CHECKED_AT_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     @Setter
     private static VersionManager versionManager;
@@ -49,10 +53,12 @@ public class McDeobFxApp extends Application {
     private McDeobVersionSelection versionSelection;
     private McDeobOptionsPanel optionsPanel;
     private McDeobStatusBox statusBox;
+    private McDeobUpdateNotification updateNotification;
     private McDeobLogWindow logWindow;
     private Button startButton;
-    private Button updateButton;
+    private Button checkUpdatesButton;
     private String latestReleaseUrl = GITHUB_RELEASES_URL;
+    private boolean updateCheckInProgress;
 
     @Override
     public void start(final Stage stage) {
@@ -77,6 +83,8 @@ public class McDeobFxApp extends Application {
         headerRow.setAlignment(Pos.TOP_LEFT);
         headerRow.getStyleClass().add("header-row");
         HBox.setHgrow(title, Priority.ALWAYS);
+
+        this.updateNotification = new McDeobUpdateNotification();
 
         this.typeSelection = new McDeobTypeSelection();
         this.typeSelection.addSelectionListener(() -> {
@@ -130,7 +138,7 @@ public class McDeobFxApp extends Application {
         VBox.setVgrow(this.logWindow, Priority.ALWAYS);
         VBox.setVgrow(logCard, Priority.ALWAYS);
 
-        root.getChildren().addAll(headerRow, controlsCard, statusRow, startRow, logCard);
+        root.getChildren().addAll(headerRow, this.updateNotification, controlsCard, statusRow, startRow, logCard);
 
         // Initial check for the already selected version (from constructor)
         final Version current = this.versionSelection.getValue();
@@ -138,7 +146,15 @@ public class McDeobFxApp extends Application {
             this.updateRemapVisibility(current);
         }
 
-        final Scene scene = new Scene(root, 900, 680);
+        final ScrollPane appScroll = new ScrollPane(root);
+        appScroll.getStyleClass().add("app-scroll");
+        appScroll.setFitToWidth(true);
+        appScroll.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+        appScroll.setVbarPolicy(ScrollPane.ScrollBarPolicy.AS_NEEDED);
+        appScroll.setPannable(true);
+        root.prefWidthProperty().bind(appScroll.widthProperty().subtract(20));
+
+        final Scene scene = new Scene(appScroll, 900, 680);
         try {
             scene.getStylesheets()
                     .add(Objects.requireNonNull(this.getClass().getResource("/styles.css"))
@@ -152,7 +168,7 @@ public class McDeobFxApp extends Application {
         stage.setScene(scene);
         stage.show();
         this.animateEntrance(headerRow, controlsCard, statusRow, startRow, logCard);
-        this.checkForUpdatesAsync();
+        this.checkForUpdatesAsync(false);
     }
 
     @Override
@@ -193,13 +209,11 @@ public class McDeobFxApp extends Application {
         final Button githubButton = this.createIconButton("\u2197");
         githubButton.setOnAction(e -> this.getHostServices().showDocument(GeneratedConstant.GITHUB_REPO_URL));
 
-        this.updateButton = this.createIconButton("\u2B06");
-        this.updateButton.getStyleClass().add("update-icon-button");
-        this.updateButton.setVisible(false);
-        this.updateButton.setManaged(false);
-        this.updateButton.setOnAction(e -> this.getHostServices().showDocument(this.latestReleaseUrl));
+        this.checkUpdatesButton = this.createIconButton("\u21BB");
+        this.checkUpdatesButton.getStyleClass().add("update-icon-button");
+        this.checkUpdatesButton.setOnAction(e -> this.checkForUpdatesAsync(true));
 
-        final HBox iconActions = new HBox(8, githubButton, this.updateButton);
+        final HBox iconActions = new HBox(8, githubButton, this.checkUpdatesButton);
         iconActions.setAlignment(Pos.CENTER_RIGHT);
         iconActions.getStyleClass().add("icon-actions");
         return iconActions;
@@ -215,35 +229,94 @@ public class McDeobFxApp extends Application {
         return button;
     }
 
-    private void checkForUpdatesAsync() {
-        final Task<Optional<GithubReleaseChecker.UpdateInfo>> task = new Task<>() {
+    private void checkForUpdatesAsync(final boolean userInitiated) {
+        if (this.updateCheckInProgress) {
+            return;
+        }
+        this.updateCheckInProgress = true;
+        this.checkUpdatesButton.setDisable(true);
+        this.updateNotification.showChecking();
+
+        final Task<GithubReleaseChecker.UpdateCheckResult> task = new Task<>() {
             @Override
-            protected Optional<GithubReleaseChecker.UpdateInfo> call() {
+            protected GithubReleaseChecker.UpdateCheckResult call() {
                 try {
-                    return McDeobFxApp.this.releaseChecker.checkForUpdate(GeneratedConstant.VERSION);
+                    return McDeobFxApp.this.releaseChecker.checkForUpdateDetailed(GeneratedConstant.VERSION);
                 } catch (final Exception e) {
                     log.error("Could not check for newer GitHub releases", e);
-                    return Optional.empty();
+                    return new GithubReleaseChecker.UpdateCheckResult(
+                            GithubReleaseChecker.UpdateCheckStatus.FAILED,
+                            null,
+                            e.getMessage() != null
+                                    ? e.getMessage()
+                                    : e.getClass().getSimpleName());
                 }
             }
         };
 
         task.setOnSucceeded(event -> {
-            final Optional<GithubReleaseChecker.UpdateInfo> updateInfo = task.getValue();
-            if (updateInfo.isPresent()) {
-                final GithubReleaseChecker.UpdateInfo info = updateInfo.get();
-                final String url = info.releaseUrl();
+            this.updateCheckInProgress = false;
+            this.checkUpdatesButton.setDisable(false);
+            final GithubReleaseChecker.UpdateCheckResult result = task.getValue();
+            if (result == null) {
+                this.updateNotification.showCheckFailed(
+                        "No response received from update checker.",
+                        () -> this.checkForUpdatesAsync(true),
+                        this.updateNotification::dismiss);
+                return;
+            }
+
+            if (result.status() == GithubReleaseChecker.UpdateCheckStatus.UPDATE_AVAILABLE
+                    && result.updateInfo() != null) {
+                final String url = result.updateInfo().releaseUrl();
                 if (url != null && !url.isBlank()) {
                     this.latestReleaseUrl = url;
                 }
-                this.updateButton.setVisible(true);
-                this.updateButton.setManaged(true);
+                this.updateNotification.showUpdateAvailable(
+                        GeneratedConstant.VERSION,
+                        result.updateInfo(),
+                        this::openLatestRelease,
+                        this.updateNotification::dismiss);
+                return;
             }
+
+            if (result.status() == GithubReleaseChecker.UpdateCheckStatus.UP_TO_DATE) {
+                if (userInitiated) {
+                    final String checkedAt = "Last checked: " + CHECKED_AT_FORMAT.format(LocalDateTime.now());
+                    this.updateNotification.showUpToDate(
+                            GeneratedConstant.VERSION, checkedAt, () -> this.checkForUpdatesAsync(true));
+                } else {
+                    this.updateNotification.dismiss();
+                }
+                return;
+            }
+
+            final String reason =
+                    result.errorMessage() != null && !result.errorMessage().isBlank()
+                            ? result.errorMessage()
+                            : "Unknown error while contacting GitHub.";
+            this.updateNotification.showCheckFailed(
+                    reason, () -> this.checkForUpdatesAsync(true), this.updateNotification::dismiss);
+        });
+
+        task.setOnFailed(event -> {
+            this.updateCheckInProgress = false;
+            this.checkUpdatesButton.setDisable(false);
+            final Throwable throwable = task.getException();
+            final String reason = throwable != null && throwable.getMessage() != null
+                    ? throwable.getMessage()
+                    : "Unexpected failure while checking updates.";
+            this.updateNotification.showCheckFailed(
+                    reason, () -> this.checkForUpdatesAsync(true), this.updateNotification::dismiss);
         });
 
         final Thread thread = new Thread(task, "Release-Check-Thread");
         thread.setDaemon(true);
         thread.start();
+    }
+
+    private void openLatestRelease() {
+        this.getHostServices().showDocument(this.latestReleaseUrl);
     }
 
     private void animateEntrance(final Node... nodes) {
