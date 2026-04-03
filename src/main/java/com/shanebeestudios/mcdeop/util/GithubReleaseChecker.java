@@ -1,5 +1,6 @@
 package com.shanebeestudios.mcdeop.util;
 
+import lombok.extern.slf4j.Slf4j;
 import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -12,9 +13,10 @@ import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+@Slf4j
 public final class GithubReleaseChecker {
     private static final URI LATEST_RELEASE_API =
-            URI.create("https://api.github.com/repos/Timmi6790/McDeob/releases/latest");
+            URI.create("https://api.github.com/repos/" + GeneratedConstant.GITHUB_REPO_NAME + "/releases/latest");
     private static final Pattern TAG_NAME_PATTERN = Pattern.compile("\"tag_name\"\\s*:\\s*\"([^\"]+)\"");
     private static final Pattern HTML_URL_PATTERN = Pattern.compile("\"html_url\"\\s*:\\s*\"([^\"]+)\"");
     private static final Pattern NUMBER_PATTERN = Pattern.compile("\\d+");
@@ -28,8 +30,10 @@ public final class GithubReleaseChecker {
      * 5) Return update info only when latest > current.
      */
     public Optional<UpdateInfo> checkForUpdate(final String currentVersion) throws IOException, InterruptedException {
-        final HttpClient client =
-                HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(5)).build();
+        final HttpClient client = HttpClient.newBuilder()
+                .connectTimeout(Duration.ofSeconds(5))
+                .followRedirects(HttpClient.Redirect.NORMAL)
+                .build();
 
         final HttpRequest request = HttpRequest.newBuilder(LATEST_RELEASE_API)
                 .header("Accept", "application/vnd.github+json")
@@ -60,8 +64,9 @@ public final class GithubReleaseChecker {
     }
 
     private boolean isNewer(final String currentVersion, final String latestVersion) {
-        final List<Integer> currentParts = this.parseVersionParts(currentVersion);
-        final List<Integer> latestParts = this.parseVersionParts(latestVersion);
+        final List<Integer> currentParts = this.parseVersionParts(this.normalizeVersion(currentVersion));
+        final List<Integer> latestParts = this.parseVersionParts(this.normalizeVersion(latestVersion));
+
         if (currentParts.isEmpty() || latestParts.isEmpty()) {
             return false;
         }
@@ -78,6 +83,16 @@ public final class GithubReleaseChecker {
             }
         }
         return false;
+    }
+
+    private String normalizeVersion(final String version) {
+        if (version == null || version.isEmpty()) {
+            return version;
+        }
+        if (version.startsWith("v") || version.startsWith("V")) {
+            return version.substring(1);
+        }
+        return version;
     }
 
     private List<Integer> parseVersionParts(final String version) {

@@ -38,8 +38,7 @@ import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 public class McDeobFxApp extends Application {
-    private static final String GITHUB_REPO_URL = "https://github.com/Timmi6790/McDeob";
-    private static final String GITHUB_RELEASES_URL = GITHUB_REPO_URL + "/releases/latest";
+    private static final String GITHUB_RELEASES_URL = GeneratedConstant.GITHUB_REPO_URL + "/releases/latest";
 
     @Setter
     private static VersionManager versionManager;
@@ -192,7 +191,7 @@ public class McDeobFxApp extends Application {
 
     private HBox createIconActions() {
         final Button githubButton = this.createIconButton("\u2197");
-        githubButton.setOnAction(e -> this.getHostServices().showDocument(GITHUB_REPO_URL));
+        githubButton.setOnAction(e -> this.getHostServices().showDocument(GeneratedConstant.GITHUB_REPO_URL));
 
         this.updateButton = this.createIconButton("\u2B06");
         this.updateButton.getStyleClass().add("update-icon-button");
@@ -223,7 +222,7 @@ public class McDeobFxApp extends Application {
                 try {
                     return McDeobFxApp.this.releaseChecker.checkForUpdate(GeneratedConstant.VERSION);
                 } catch (final Exception e) {
-                    log.debug("Could not check for newer GitHub releases", e);
+                    log.error("Could not check for newer GitHub releases", e);
                     return Optional.empty();
                 }
             }
