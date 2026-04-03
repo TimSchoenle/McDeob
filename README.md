@@ -1,44 +1,65 @@
 # McDeob
 
-[![GitHub release (latest by date including pre-releases)](https://img.shields.io/github/v/release/Timmi6790/McDeob?include_prereleases)](https://github.com/Timmi6790/McDeob/releases/latest)
-[![GitHub issues](https://img.shields.io/github/issues/Timmi6790/McDeob)](https://github.com/Timmi6790/McDeob/issues)
-![GitHub closed issues](https://img.shields.io/github/issues-closed/Timmi6790/McDeob)
-[![GitHub pull requests](https://img.shields.io/github/issues-pr/Timmi6790/McDeob)](https://github.com/Timmi6790/McDeob/pulls)
-[![GitHub](https://img.shields.io/github/license/Timmi6790/McDeob)](https://github.com/Timmi6790/McDeob/blob/master/LICENSE)
+[![Latest Release](https://img.shields.io/github/v/release/TimSchoenle/McDeob?include_prereleases)](https://github.com/TimSchoenle/McDeob/releases/latest)
+[![License](https://img.shields.io/github/license/TimSchoenle/McDeob)](https://github.com/TimSchoenle/McDeob/blob/master/LICENSE)
 
-**McDeob** is a re-mapping and deobfuscation tool for Minecraft server/client jars.   
-This tool will download the appropriate Minecraft server/client jar along with the mappings for that version,
-then it will proceed to remap the jar and optionally decompile it. Simply unzip that file to find all your
-remapped/decompiled Minecraft code.
+McDeob is a desktop tool that helps you generate readable Minecraft client/server source output from official game
+files.
 
-## Requirements
+## Download and Use
+
+1. Open the latest release page:  
+   [https://github.com/TimSchoenle/McDeob/releases/latest](https://github.com/TimSchoenle/McDeob/releases/latest)
+2. Download the file that matches your system.
+3. Run the app.
+4. In the UI:
+    - Choose `Client` or `Server`
+    - Pick a Minecraft version
+    - Enable the options you want (`Remap`, `Decompile`, `Zip`)
+    - Click start and wait for completion
+5. Open the output folder shown by the app.
+
+## What You Get
+
+- A remapped jar and/or decompiled source output
+- Optional zip archive (if enabled)
+- Files organized by version and selected options
+
+## Screenshot
+
+![McDeob UI](docs/images/ui.png)
+
+## Before You Start
+
+- Internet connection is required (the app downloads Minecraft files and mappings).
+- If you run a `.jar` build, install Java 21 or newer.
+
+## Important Legal Notice
+
+- Output is for personal use only.
+- Decompiled Minecraft output contains proprietary code.
+- Do not upload or redistribute generated Minecraft source files.
+
+## Developer Section
+
+This section is for contributors and power users who want to run McDeob from source.
+
+### Requirements
 
 - Java 21+
-- GraalVM 21+ (set `GRAALVM_HOME`)
-- Native toolchain for your OS:
-    - Windows: Visual Studio Build Tools (C++ workload)
-    - macOS: Xcode Command Line Tools
-    - Linux: `gcc`, `g++`, and related build essentials
+- GraalVM 21+ (`GRAALVM_HOME` set) for native builds
+- Native toolchain:
+  - Windows: Visual Studio Build Tools (C++ workload)
+  - macOS: Xcode Command Line Tools
+  - Linux: `gcc`, `g++`, and build essentials
 
-## Fork Notice
+### Run in GUI Mode
 
-I don't plan to PR this to the original repo, as I have adjusted the code for my personal needs.
+```bash
+./gradlew run
+```
 
-### Fork Changes
-
-* Add dynamic version fetching
-* Add all versions that have the mappings available
-* Add Remap and Zip options
-* Restructure saving structure
-* Replace Fernflower with Vineflower (Multithreaded support)
-* Random bug fixes the original author missed
-
-## Running
-
-Details for installing and running **McDeob** can be found on the
-[**Wiki**](https://github.com/ShaneBeeStudios/McDeob/wiki).
-
-### CLI
+### CLI Examples
 
 ```bash
 ./gradlew run --args="--versions"
@@ -48,73 +69,28 @@ Details for installing and running **McDeob** can be found on the
 ./gradlew run --args="--type client --version 1.21.4 --libraries --gradle-project"
 ```
 
-`--gradle-project` requires `--decompile` and `--libraries`.
-
-`--decompiler` supports `vineflower` (default), `fernflower`, `cfr`, and `jadx`.
-
-### GUI
-
-```bash
-./gradlew run
-```
+- `--gradle-project` requires `--decompile` and `--libraries`.
+- `--decompiler` supports `vineflower` (default), `fernflower`, `cfr`, and `jadx`.
 
 ### Native Build (GluonFX)
 
-Build native binary for the host OS:
-
 ```bash
 ./gradlew nativeBuild
-```
-
-Run native binary:
-
-```bash
 ./gradlew nativeRun
-```
-
-Package installer/bundle:
-
-```bash
 ./gradlew nativePackage
 ```
 
-Artifacts are generated under `build/gluonfx/`.
+Native artifacts are generated in `build/gluonfx/`.
 
-### Note:
+### Processing Time Notes
 
-The remapping process takes around 2 minutes (give or take). While it is remapping you will see progress in the
-app.   
-The decompiling process takes about 3 minutes (give or take). Currently there is no progress in the app, so just wait
-until the app says it is completed.    
-(These numbers are based on a test run on my Mac (MacbookPro with M1 chip), times may vary on other machines.)
+- Remapping usually takes around 2 minutes, with visible progress.
+- Decompiling usually takes around 3 minutes, and may not show fine-grained progress.
+- Times vary by machine and selected options.
 
-### SUPER IMPORTANT NOTE
+### Core Processing Tools
 
-The files output by this app are for your own personal use only.   
-The mappings used to decompile are provided by Mojang, but come with a hefty copyright from Microsoft.   
-You can use these files personally however you see fit, but you are not permitted to distribute them, since they do
-contain proprietary Minecraft code.    
-That said, you may **NOT** upload the resulting files to something like GitHub.
-
-## Preview
-
-![](https://i.imgur.com/aXFtkaI.png)
-
-## Tools
-
-This application uses multiple tools for the processing of jar files:
-
-1) [**Reconstruct by LXGaming**](https://github.com/LXGaming/Reconstruct) = This tool remaps the Minecraft jar using
-   Minecraft's mappings.
-2) [**Vineflower**](https://github.com/Vineflower/vineflower) = This tool is used to decompile the jar file (class
-   files) into usable .java files.
-3) [**Fernflower profile
-   **](https://github.com/JetBrains/intellij-community/tree/master/plugins/java-decompiler/engine) =
-   Legacy decompiler-style output profile powered by the Vineflower engine.
-5) [**JADX**](https://github.com/skylot/jadx) = Additional decompiler backend with built-in deobfuscation passes.
-
-## License
-
-This tool shades in both [**Reconstruct by LXGaming**](https://github.com/LXGaming/Reconstruct) and
-[**Vineflower**](https://github.com/Vineflower/vineflower), and
-[**JADX**](https://github.com/skylot/jadx), please see their repos for the appropriate licenses.
+1. [Reconstruct](https://github.com/LXGaming/Reconstruct) for remapping Minecraft jars.
+2. [Vineflower](https://github.com/Vineflower/vineflower) for decompilation.
+3. [Fernflower profile](https://github.com/JetBrains/intellij-community/tree/master/plugins/java-decompiler/engine) for legacy-style output via Vineflower engine support.
+4. [JADX](https://github.com/skylot/jadx) as an additional decompiler backend.
