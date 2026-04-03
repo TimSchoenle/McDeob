@@ -1,5 +1,25 @@
 # Changelog
 
+## [2.11.0](https://github.com/TimSchoenle/McDeob/compare/v2.10.0...v2.11.0) (2026-04-03)
+
+
+### Features
+
+* Add decompiler and project setup options ([#170](https://github.com/TimSchoenle/McDeob/issues/170)) ([005f6d4](https://github.com/TimSchoenle/McDeob/commit/005f6d4180bf34a556b6ff3dad3848b2c46fdc11))
+* **ui:** add open output button ([#173](https://github.com/TimSchoenle/McDeob/issues/173)) ([bac35c2](https://github.com/TimSchoenle/McDeob/commit/bac35c2f1155a2e93b0ab5d658f7fde9684a6b85))
+
+
+### Bug Fixes
+
+* server decompiler not working with newer versions ([#171](https://github.com/TimSchoenle/McDeob/issues/171)) ([5f5f3a3](https://github.com/TimSchoenle/McDeob/commit/5f5f3a34179203e39d7361cc1b7164d0146a811c))
+* **ui:** update checker ([#172](https://github.com/TimSchoenle/McDeob/issues/172)) ([335305c](https://github.com/TimSchoenle/McDeob/commit/335305c729500f225fd438a4dc3638a0424b8178))
+* use cosign to sign native files ([#168](https://github.com/TimSchoenle/McDeob/issues/168)) ([6297124](https://github.com/TimSchoenle/McDeob/commit/6297124887d4e4732e695bed91f8f46337079bf8))
+
+
+### Documentation
+
+* **readme:** modernize readme to better reflect usage ([#174](https://github.com/TimSchoenle/McDeob/issues/174)) ([11a340f](https://github.com/TimSchoenle/McDeob/commit/11a340f60b23815592a75da2b23ef361c9bbdb65))
+
 ## [2.10.0](https://github.com/TimSchoenle/McDeob/compare/v2.9.4...v2.10.0) (2026-03-31)
 
 
