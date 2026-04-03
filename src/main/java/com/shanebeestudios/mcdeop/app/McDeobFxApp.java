@@ -12,11 +12,17 @@ import com.shanebeestudios.mcdeop.processor.Processor;
 import com.shanebeestudios.mcdeop.processor.ResourceRequest;
 import com.shanebeestudios.mcdeop.util.GeneratedConstant;
 import com.shanebeestudios.mcdeop.util.GithubReleaseChecker;
+import com.shanebeestudios.mcdeop.util.Util;
 import de.timmi6790.launchermeta.data.release.ReleaseManifest;
 import de.timmi6790.launchermeta.data.version.Version;
+import java.awt.Desktop;
+import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Locale;
 import java.util.Objects;
 import javafx.animation.FadeTransition;
 import javafx.animation.TranslateTransition;
@@ -56,7 +62,9 @@ public class McDeobFxApp extends Application {
     private McDeobUpdateNotification updateNotification;
     private McDeobLogWindow logWindow;
     private Button startButton;
+    private Button openDirectoryButton;
     private Button checkUpdatesButton;
+    private Path lastOutputDirectory;
     private String latestReleaseUrl = GITHUB_RELEASES_URL;
     private boolean updateCheckInProgress;
 
@@ -123,11 +131,17 @@ public class McDeobFxApp extends Application {
         this.startButton.setMaxWidth(Double.MAX_VALUE);
         this.startButton.setOnAction(e -> this.handleStart());
 
+        this.openDirectoryButton = new Button("Open Output Folder");
+        this.openDirectoryButton.getStyleClass().add("ghost-button");
+        this.openDirectoryButton.setPrefHeight(40);
+        this.openDirectoryButton.setDisable(true);
+        this.openDirectoryButton.setOnAction(e -> this.openOutputDirectory());
+
         final HBox statusRow = new HBox(this.statusBox);
         statusRow.setAlignment(Pos.CENTER_LEFT);
         statusRow.getStyleClass().add("action-row");
 
-        final HBox startRow = new HBox(this.startButton);
+        final HBox startRow = new HBox(10, this.startButton, this.openDirectoryButton);
         HBox.setHgrow(this.startButton, Priority.ALWAYS);
         startRow.setAlignment(Pos.CENTER_LEFT);
         startRow.getStyleClass().add("start-row");
@@ -348,6 +362,7 @@ public class McDeobFxApp extends Application {
             this.statusBox.updateStatus("Invalid Version!", true);
             return;
         }
+        this.lastOutputDirectory = this.resolveOutputDirectory(version);
 
         this.setControlsEnabled(false);
         this.statusBox.updateRunningMessage("Fetching release manifest...");
@@ -384,6 +399,7 @@ public class McDeobFxApp extends Application {
 
         task.setOnSucceeded(e -> {
             this.statusBox.updateStatus("Completed successfully!", false);
+            this.openDirectoryButton.setDisable(false);
             this.resetControls();
         });
 
@@ -400,10 +416,38 @@ public class McDeobFxApp extends Application {
         this.typeSelection.setControlsDisable(!enabled);
         this.optionsPanel.setControlsDisable(!enabled);
         this.startButton.setDisable(!enabled);
+        this.openDirectoryButton.setDisable(!enabled || this.lastOutputDirectory == null);
     }
 
     private void resetControls() {
         this.setControlsEnabled(true);
         this.startButton.setText("Start Processing");
+    }
+
+    private Path resolveOutputDirectory(final Version version) {
+        final String versionFolder = String.format(
+                "%s-%s", this.typeSelection.getSelectedType().name().toLowerCase(Locale.ENGLISH), version.id());
+        return Util.getBaseDataFolder().resolve(versionFolder).toAbsolutePath();
+    }
+
+    private void openOutputDirectory() {
+        if (this.lastOutputDirectory == null) {
+            this.statusBox.updateStatus("No output directory is available yet.", true);
+            return;
+        }
+        if (!Files.isDirectory(this.lastOutputDirectory)) {
+            this.statusBox.updateStatus("Output directory not found: " + this.lastOutputDirectory, true);
+            return;
+        }
+        if (!Desktop.isDesktopSupported()) {
+            this.statusBox.updateStatus("Desktop integration is not supported on this system.", true);
+            return;
+        }
+        try {
+            Desktop.getDesktop().open(this.lastOutputDirectory.toFile());
+        } catch (final IOException exception) {
+            log.error("Failed to open output directory {}", this.lastOutputDirectory, exception);
+            this.statusBox.updateStatus("Failed to open output directory.", true);
+        }
     }
 }
