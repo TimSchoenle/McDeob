@@ -233,6 +233,20 @@ allprojects {
     }
 }
 
+fun getGitRepoName(): String {
+    val process =
+        ProcessBuilder("git", "config", "--get", "remote.origin.url")
+            .redirectErrorStream(true)
+            .start()
+    val url =
+        process.inputStream
+            .bufferedReader()
+            .readText()
+            .trim()
+    val regex = Regex("""github\.com[/:](.+?)(?:\.git)?$""")
+    return regex.find(url)?.groupValues?.get(1) ?: "unknown/unknown"
+}
+
 buildConfig {
     className("GeneratedConstant")
     packageName("com.shanebeestudios.mcdeop.util")
@@ -249,4 +263,11 @@ buildConfig {
                 .toString()
         },
     )
+    buildConfigField(
+        "GITHUB_REPO_NAME",
+        provider {
+            getGitRepoName()
+        },
+    )
+    buildConfigField("GITHUB_REPO_URL", provider { "https://github.com/${getGitRepoName()}" })
 }
