@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.12.0](https://github.com/TimSchoenle/McDeob/compare/v2.11.0...v2.12.0) (2026-04-07)
+
+
+### Features
+
+* **ui:** redo version selection with propper type selection ([#176](https://github.com/TimSchoenle/McDeob/issues/176)) ([ae96a37](https://github.com/TimSchoenle/McDeob/commit/ae96a37a3e1308478ef1e9837a6666d04ace4145))
+
 ## [2.11.0](https://github.com/TimSchoenle/McDeob/compare/v2.10.0...v2.11.0) (2026-04-03)
 
 
