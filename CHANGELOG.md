@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.12.1](https://github.com/TimSchoenle/McDeob/compare/v2.12.0...v2.12.1) (2026-04-07)
+
+
+### Bug Fixes
+
+* **ui:** open output button native support ([#178](https://github.com/TimSchoenle/McDeob/issues/178)) ([d3236a6](https://github.com/TimSchoenle/McDeob/commit/d3236a6b678366fe3b5933210267ebe12b210c49))
+
 ## [2.12.0](https://github.com/TimSchoenle/McDeob/compare/v2.11.0...v2.12.0) (2026-04-07)
 
 
