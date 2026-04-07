@@ -15,13 +15,13 @@ import com.shanebeestudios.mcdeop.util.GithubReleaseChecker;
 import com.shanebeestudios.mcdeop.util.Util;
 import de.timmi6790.launchermeta.data.release.ReleaseManifest;
 import de.timmi6790.launchermeta.data.version.Version;
-import java.awt.Desktop;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 import javafx.animation.FadeTransition;
@@ -483,15 +483,35 @@ public class McDeobFxApp extends Application {
             this.statusBox.updateStatus("Output directory not found: " + this.lastOutputDirectory, true);
             return;
         }
-        if (!Desktop.isDesktopSupported()) {
-            this.statusBox.updateStatus("Desktop integration is not supported on this system.", true);
-            return;
-        }
-        try {
-            Desktop.getDesktop().open(this.lastOutputDirectory.toFile());
-        } catch (final IOException exception) {
-            log.error("Failed to open output directory {}", this.lastOutputDirectory, exception);
+        if (!this.tryOpenDirectory(this.lastOutputDirectory)) {
             this.statusBox.updateStatus("Failed to open output directory.", true);
+        }
+    }
+
+    private boolean tryOpenDirectory(final Path directory) {
+        final String osName = System.getProperty("os.name", "").toLowerCase(Locale.ENGLISH);
+        final List<String> command;
+        if (osName.contains("win")) {
+            command = List.of("explorer.exe", directory.toString());
+        } else if (osName.contains("mac")) {
+            command = List.of("open", directory.toString());
+        } else {
+            command = List.of("xdg-open", directory.toString());
+        }
+
+        try {
+            new ProcessBuilder(command).start();
+            return true;
+        } catch (final IOException exception) {
+            log.warn("Failed to open output directory using command {}", command, exception);
+        }
+
+        try {
+            this.getHostServices().showDocument(directory.toUri().toString());
+            return true;
+        } catch (final Exception exception) {
+            log.error("Failed to open output directory {}", directory, exception);
+            return false;
         }
     }
 }
