@@ -31,6 +31,7 @@ import javafx.application.Platform;
 import javafx.concurrent.Task;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.geometry.Rectangle2D;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
@@ -39,7 +40,9 @@ import javafx.scene.control.ScrollPane;
 import javafx.scene.image.Image;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
+import javafx.stage.Screen;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 import lombok.Setter;
@@ -111,6 +114,12 @@ public class McDeobFxApp extends Application {
                 this.updateRemapVisibility(newV);
             }
         });
+        final VBox versionSelectionRow = new VBox(8);
+        versionSelectionRow.setAlignment(Pos.CENTER_LEFT);
+        versionSelectionRow.setMaxWidth(Region.USE_PREF_SIZE);
+        versionSelectionRow
+                .getChildren()
+                .addAll(this.versionSelection.getVersionTypeSelectionControl(), this.versionSelection);
 
         final VBox controlsCard = new VBox(14);
         controlsCard.setFillWidth(true);
@@ -119,7 +128,7 @@ public class McDeobFxApp extends Application {
                 .getChildren()
                 .addAll(
                         this.createFieldRow("Target", this.typeSelection),
-                        this.createFieldRow("Minecraft Version", this.versionSelection),
+                        this.createFieldRow("Minecraft Version", versionSelectionRow),
                         this.createFieldRow("Pipeline Steps", this.optionsPanel));
 
         this.statusBox = new McDeobStatusBox();
@@ -177,9 +186,8 @@ public class McDeobFxApp extends Application {
             log.warn("Could not load styles.css", e);
         }
 
-        stage.setMinWidth(780);
-        stage.setMinHeight(560);
         stage.setScene(scene);
+        this.configureStageSize(stage, scene, root, headerRow, controlsCard, statusRow, startRow, logCard);
         stage.show();
         this.animateEntrance(headerRow, controlsCard, statusRow, startRow, logCard);
         this.checkForUpdatesAsync(false);
@@ -356,6 +364,41 @@ public class McDeobFxApp extends Application {
         }
     }
 
+    private void configureStageSize(
+            final Stage stage,
+            final Scene scene,
+            final VBox root,
+            final Node headerRow,
+            final Node controlsCard,
+            final Node statusRow,
+            final Node startRow,
+            final Node logCard) {
+        scene.getRoot().applyCss();
+        scene.getRoot().layout();
+
+        final double horizontalPadding =
+                root.getPadding().getLeft() + root.getPadding().getRight();
+        final double contentMinWidth = Math.max(
+                Math.max(headerRow.prefWidth(-1), controlsCard.prefWidth(-1)),
+                Math.max(statusRow.prefWidth(-1), Math.max(startRow.prefWidth(-1), logCard.prefWidth(-1))));
+        final double computedMinWidth = contentMinWidth + horizontalPadding + 56;
+
+        final double constrainedContentWidth = Math.max(contentMinWidth, 760);
+        final double computedMinHeight = root.prefHeight(constrainedContentWidth) + 56;
+
+        final Rectangle2D visualBounds = Screen.getPrimary().getVisualBounds();
+        final double monitorWidth = visualBounds.getWidth();
+        final double monitorHeight = visualBounds.getHeight();
+
+        final double minWidth = Math.min(computedMinWidth, monitorWidth);
+        final double minHeight = Math.min(computedMinHeight, monitorHeight);
+
+        stage.setMinWidth(minWidth);
+        stage.setMinHeight(minHeight);
+        stage.setWidth(Math.min(Math.max(scene.getWidth(), minWidth), monitorWidth));
+        stage.setHeight(Math.min(Math.max(scene.getHeight(), minHeight), monitorHeight));
+    }
+
     private void handleStart() {
         final Version version = this.versionSelection.getValue();
         if (version == null) {
@@ -413,6 +456,7 @@ public class McDeobFxApp extends Application {
 
     private void setControlsEnabled(final boolean enabled) {
         this.versionSelection.setDisable(!enabled);
+        this.versionSelection.setVersionTypeSelectionDisable(!enabled);
         this.typeSelection.setControlsDisable(!enabled);
         this.optionsPanel.setControlsDisable(!enabled);
         this.startButton.setDisable(!enabled);

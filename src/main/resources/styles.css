@@ -160,6 +160,196 @@
     -fx-background-color: #dceef3;
 }
 
+.version-table-row,
+.version-table-row-compact {
+    -fx-alignment: center-left;
+    -fx-padding: 1 0;
+}
+
+.version-id {
+    -fx-font-weight: 800;
+    -fx-text-fill: #153954;
+    -fx-alignment: center-left;
+}
+
+.version-type {
+    -fx-text-fill: #0f5f58;
+    -fx-font-weight: 700;
+    -fx-padding: 3 8;
+    -fx-background-color: #def2ed;
+    -fx-background-radius: 999;
+    -fx-alignment: center;
+}
+
+.version-release-time {
+    -fx-text-fill: #456177;
+    -fx-font-size: 12px;
+    -fx-alignment: center-right;
+}
+
+.version-col-id {
+    -fx-padding: 0 8 0 0;
+}
+
+.version-col-type {
+    -fx-padding: 3 10;
+}
+
+.version-col-time {
+    -fx-padding: 0 0 0 10;
+}
+
+.version-type-point-selection {
+    -fx-alignment: center-left;
+    -fx-spacing: 8;
+}
+
+.version-type-point {
+    -fx-padding: 6 10;
+    -fx-background-color: #f3f7fb;
+    -fx-background-radius: 999;
+    -fx-border-color: #c5d1db;
+    -fx-border-radius: 999;
+    -fx-border-width: 1;
+    -fx-text-fill: #224056;
+    -fx-font-weight: 700;
+    -fx-cursor: hand;
+}
+
+.version-type-point .box {
+    -fx-background-color: transparent;
+    -fx-border-color: #72889a;
+    -fx-border-width: 1;
+    -fx-border-radius: 4;
+}
+
+.version-type-point:selected {
+    -fx-background-color: #dff2ed;
+    -fx-border-color: #67b4a6;
+    -fx-text-fill: #0f5b54;
+}
+
+.version-type-point:selected .box {
+    -fx-background-color: -mc-accent;
+    -fx-border-color: -mc-accent;
+}
+
+.version-type-point:selected .mark {
+    -fx-background-color: white;
+}
+
+.version-type-variant-release {
+    -fx-text-fill: #0b4f89;
+    -fx-background-color: #d9ebff;
+}
+
+.version-type-variant-snapshot {
+    -fx-text-fill: #0f5f58;
+    -fx-background-color: #d8f4ec;
+}
+
+.version-type-variant-pre {
+    -fx-text-fill: #7a3e00;
+    -fx-background-color: #ffdcb5;
+}
+
+.version-type-variant-rc {
+    -fx-text-fill: #2d4f8a;
+    -fx-background-color: #dbe4ff;
+}
+
+.version-type-variant-april-fools {
+    -fx-text-fill: #8a1f55;
+    -fx-background-color: #ffd6ec;
+}
+
+.version-type-variant-old-beta {
+    -fx-text-fill: #5f3d84;
+    -fx-background-color: #e9dbff;
+}
+
+.version-type-variant-old-alpha {
+    -fx-text-fill: #5d4534;
+    -fx-background-color: #f5e5d7;
+}
+
+.version-type-point-release {
+    -fx-border-color: #75a8da;
+    -fx-text-fill: #0b4f89;
+}
+
+.version-type-point-release:selected {
+    -fx-background-color: #d9ebff;
+    -fx-border-color: #4d8dcd;
+    -fx-text-fill: #0a4679;
+}
+
+.version-type-point-snapshot {
+    -fx-border-color: #73b9a8;
+    -fx-text-fill: #0f5f58;
+}
+
+.version-type-point-snapshot:selected {
+    -fx-background-color: #d8f4ec;
+    -fx-border-color: #4ca08a;
+    -fx-text-fill: #0e564f;
+}
+
+.version-type-point-pre {
+    -fx-border-color: #d48e49;
+    -fx-text-fill: #7a3e00;
+}
+
+.version-type-point-pre:selected {
+    -fx-background-color: #ffdcb5;
+    -fx-border-color: #bf7627;
+    -fx-text-fill: #663300;
+}
+
+.version-type-point-rc {
+    -fx-border-color: #8299e0;
+    -fx-text-fill: #2d4f8a;
+}
+
+.version-type-point-rc:selected {
+    -fx-background-color: #dbe4ff;
+    -fx-border-color: #607ad1;
+    -fx-text-fill: #28457a;
+}
+
+.version-type-point-april-fools {
+    -fx-border-color: #d686b2;
+    -fx-text-fill: #8a1f55;
+}
+
+.version-type-point-april-fools:selected {
+    -fx-background-color: #ffd6ec;
+    -fx-border-color: #c86097;
+    -fx-text-fill: #761a48;
+}
+
+.version-type-point-old-beta {
+    -fx-border-color: #af91d2;
+    -fx-text-fill: #5f3d84;
+}
+
+.version-type-point-old-beta:selected {
+    -fx-background-color: #e9dbff;
+    -fx-border-color: #8f6db7;
+    -fx-text-fill: #533572;
+}
+
+.version-type-point-old-alpha {
+    -fx-border-color: #cfab8e;
+    -fx-text-fill: #5d4534;
+}
+
+.version-type-point-old-alpha:selected {
+    -fx-background-color: #f5e5d7;
+    -fx-border-color: #b78964;
+    -fx-text-fill: #4c382a;
+}
+
 .options-panel {
     -fx-padding: 0;
     -fx-alignment: center-left;
