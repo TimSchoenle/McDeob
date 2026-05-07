@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.12.2](https://github.com/TimSchoenle/McDeob/compare/v2.12.1...v2.12.2) (2026-05-07)
+
+
+### Bug Fixes
+
+* **deps:** update dependency com.fasterxml.jackson.core:jackson-databind to v2.21.3 ([#200](https://github.com/TimSchoenle/McDeob/issues/200)) ([8f06142](https://github.com/TimSchoenle/McDeob/commit/8f0614240d9d577d5ffce1e6d53d7ef9cd72c41e))
+* **deps:** update dependency org.vineflower:vineflower to v1.12.0 ([#203](https://github.com/TimSchoenle/McDeob/issues/203)) ([dd2a650](https://github.com/TimSchoenle/McDeob/commit/dd2a650ccee61cad781e1e5586d498ea9ccb1146))
+
 ## [2.12.1](https://github.com/TimSchoenle/McDeob/compare/v2.12.0...v2.12.1) (2026-04-07)
 
 
