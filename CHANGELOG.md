@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.12.3](https://github.com/TimSchoenle/McDeob/compare/v2.12.2...v2.12.3) (2026-05-19)
+
+
+### Bug Fixes
+
+* **deps:** update dependency org.slf4j:slf4j-simple to v2.0.18 ([#211](https://github.com/TimSchoenle/McDeob/issues/211)) ([72b809c](https://github.com/TimSchoenle/McDeob/commit/72b809c2a6701707d41be727cb7e438e5432969a))
+
 ## [2.12.2](https://github.com/TimSchoenle/McDeob/compare/v2.12.1...v2.12.2) (2026-05-07)
 
 
