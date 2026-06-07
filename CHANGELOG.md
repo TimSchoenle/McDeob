@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.12.4](https://github.com/TimSchoenle/McDeob/compare/v2.12.3...v2.12.4) (2026-06-07)
+
+
+### Bug Fixes
+
+* **deps:** update dependency com.fasterxml.jackson.core:jackson-databind to v2.21.4 ([#227](https://github.com/TimSchoenle/McDeob/issues/227)) ([2488237](https://github.com/TimSchoenle/McDeob/commit/2488237ba9e0fe1c507de6db0361c8c0fde40c97))
+* **deps:** update jackson monorepo to v2.22.0 ([#232](https://github.com/TimSchoenle/McDeob/issues/232)) ([5c1e7e8](https://github.com/TimSchoenle/McDeob/commit/5c1e7e8f0df68bb9f1974256380255caa6560757))
+
 ## [2.12.3](https://github.com/TimSchoenle/McDeob/compare/v2.12.2...v2.12.3) (2026-05-19)
 
 
