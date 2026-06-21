@@ -13,7 +13,7 @@ spotless = "8.7.0"
 shadow = "9.4.2"
 buildconfig = "6.0.10"
 javafxplugin = "0.1.0"
-gluonfx = "1.0.28"
+gluonfx = "1.0.29"
 foojay-resolver = "1.0.0"
 
 [libraries]
