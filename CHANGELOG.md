@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.12.5](https://github.com/TimSchoenle/McDeob/compare/v2.12.4...v2.12.5) (2026-06-20)
+
+
+### Bug Fixes
+
+* **deps:** update okhttp monorepo to v5.4.0 ([#240](https://github.com/TimSchoenle/McDeob/issues/240)) ([339e7fd](https://github.com/TimSchoenle/McDeob/commit/339e7fd836acb4705eaf1ea2875a22e4ea7acfca))
+
 ## [2.12.4](https://github.com/TimSchoenle/McDeob/compare/v2.12.3...v2.12.4) (2026-06-07)
 
 
