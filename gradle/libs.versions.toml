@@ -9,7 +9,7 @@ picocli = "4.7.7"
 
 # plugins
 lombok = "9.5.0"
-spotless = "8.7.0"
+spotless = "8.8.0"
 shadow = "9.4.3"
 buildconfig = "6.0.10"
 javafxplugin = "0.1.0"
