@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.12.6](https://github.com/TimSchoenle/McDeob/compare/v2.12.5...v2.12.6) (2026-07-13)
+
+
+### Bug Fixes
+
+* **deps:** update dependency com.fasterxml.jackson.core:jackson-databind to v2.22.1 ([#269](https://github.com/TimSchoenle/McDeob/issues/269)) ([c23776a](https://github.com/TimSchoenle/McDeob/commit/c23776a2796ec794db8514b54c4907d9564c2049))
+
 ## [2.12.5](https://github.com/TimSchoenle/McDeob/compare/v2.12.4...v2.12.5) (2026-06-20)
 
 
