@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.12.7](https://github.com/TimSchoenle/McDeob/compare/v2.12.6...v2.12.7) (2026-07-19)
+
+
+### Bug Fixes
+
+* **deps:** update jadx to v1.5.6 ([#277](https://github.com/TimSchoenle/McDeob/issues/277)) ([d428a7e](https://github.com/TimSchoenle/McDeob/commit/d428a7e5dfc4b031226c4417a97e68aef0f7f9c9))
+
 ## [2.12.6](https://github.com/TimSchoenle/McDeob/compare/v2.12.5...v2.12.6) (2026-07-13)
 
 
