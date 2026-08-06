@@ -10,4 +10,5 @@ public record ProcessorOptions(
         boolean zipDecompileOutput,
         boolean downloadLibraries,
         boolean setupGradleProject,
+        boolean repairSources,
         DecompilerType decompilerType) {}

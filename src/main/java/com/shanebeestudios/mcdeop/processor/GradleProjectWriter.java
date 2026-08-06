@@ -13,7 +13,7 @@ import java.util.Optional;
 import java.util.Set;
 
 final class GradleProjectWriter {
-    private static final int DEFAULT_GRADLE_JAVA_VERSION = 21;
+    static final int DEFAULT_GRADLE_JAVA_VERSION = 21;
 
     private static final String SETTINGS_TEMPLATE = """
         pluginManagement {

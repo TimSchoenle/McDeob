@@ -11,4 +11,4 @@ plugins {
 
 rootProject.name = "McDeob"
 
-include("common", "launchermeta")
+include("common", "launchermeta", "sourcerepair")

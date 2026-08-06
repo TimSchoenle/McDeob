@@ -40,6 +40,7 @@ repositories {
 dependencies {
     implementation(project(":common", "shadow"))
     implementation(project(":launchermeta", "shadow"))
+    implementation(project(":sourcerepair", "shadow"))
     implementation(libs.reconstruct.common)
     implementation(libs.vineflower)
     implementation(libs.jadx.core)

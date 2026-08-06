@@ -30,6 +30,7 @@ public class Processor {
     private final ProcessorStatusReporter statusReporter;
     private final ProcessorDownloadService downloadService;
     private final GradleProjectWriter gradleProjectWriter;
+    private final SourceRepairStage sourceRepairStage;
 
     private Processor(
             final ResourceRequest request,
@@ -49,6 +50,7 @@ public class Processor {
         final OkHttpClient httpClient = RequestModule.createHttpClient();
         this.downloadService = new ProcessorDownloadService(request, httpClient, this.paths, this.statusReporter);
         this.gradleProjectWriter = new GradleProjectWriter(request, this.paths);
+        this.sourceRepairStage = new SourceRepairStage(request, this.paths, this.statusReporter, this.downloadService);
     }
 
     public static boolean runProcessor(
@@ -95,6 +97,20 @@ public class Processor {
             return false;
         }
 
+        if (this.options.repairSources() && !this.options.decompile()) {
+            log.error("Source repair requires decompile to be enabled.");
+            this.statusReporter.send("Source repair requires decompiling.");
+            return false;
+        }
+
+        // Without the libraries the sources reference, nearly every file fails to type-check and the
+        // decompiler defects the repair exists for would be lost among the resulting noise.
+        if (this.options.repairSources() && !this.options.downloadLibraries()) {
+            log.error("Source repair requires downloading libraries.");
+            this.statusReporter.send("Source repair requires library downloads.");
+            return false;
+        }
+
         return true;
     }
 
@@ -127,13 +143,21 @@ public class Processor {
                     jarPath,
                     this.paths.decompiledJarPath(),
                     this.downloadService.resolveDecompilerLibraries(this.options, this.decompiler));
+        }
+    }
 
-            if (this.options.zipDecompileOutput()) {
-                log.info("Packing decompiled files into {}", this.paths.decompiledZipPath());
-                this.statusReporter.send("Packing decompiled files ...");
-                FileUtil.remove(this.paths.decompiledZipPath());
-                FileUtil.zip(this.paths.decompiledJarPath(), this.paths.decompiledZipPath());
-            }
+    /** Packs the decompiled sources, after any repair, so the archive matches what is on disk. */
+    private void zipDecompiledOutput() throws IOException {
+        log.info("Packing decompiled files into {}", this.paths.decompiledZipPath());
+        this.statusReporter.send("Packing decompiled files ...");
+        FileUtil.remove(this.paths.decompiledZipPath());
+        FileUtil.zip(this.paths.decompiledJarPath(), this.paths.decompiledZipPath());
+    }
+
+    private void repairSources() throws IOException {
+        try (final DurationTracker ignored =
+                new DurationTracker(duration -> log.info("Source repair completed in {}!", duration))) {
+            this.sourceRepairStage.run();
         }
     }
 
@@ -211,6 +235,14 @@ public class Processor {
                 Path decompileJarPath = remapped ? this.paths.remappedJar() : this.paths.jarPath();
                 decompileJarPath = this.prepareServerJarForDecompile(decompileJarPath, remapped);
                 this.decompileJar(decompileJarPath);
+            }
+
+            if (this.options.repairSources()) {
+                this.repairSources();
+            }
+
+            if (this.options.zipDecompileOutput()) {
+                this.zipDecompiledOutput();
             }
 
             if (this.options.setupGradleProject()) {

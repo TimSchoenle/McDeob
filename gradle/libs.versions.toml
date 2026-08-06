@@ -29,6 +29,7 @@ reconstruct-common = { module = "io.github.lxgaming:reconstruct-common", version
 vineflower = { module = "org.vineflower:vineflower", version.ref = "vineflower" }
 jadx-core = { module = "io.github.skylot:jadx-core", version.ref = "jadx" }
 jadx-java-input = { module = "io.github.skylot:jadx-java-input", version.ref = "jadx" }
+slf4j-api = { module = "org.slf4j:slf4j-api", version.ref = "slf4j" }
 slf4j-simple = { module = "org.slf4j:slf4j-simple", version.ref = "slf4j" }
 picocli = { module = "info.picocli:picocli", version.ref = "picocli" }
 picocli-codegen = { module = "info.picocli:picocli-codegen", version.ref = "picocli" }

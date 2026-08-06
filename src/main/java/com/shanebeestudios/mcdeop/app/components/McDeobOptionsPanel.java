@@ -18,6 +18,7 @@ public class McDeobOptionsPanel extends FlowPane {
     private final CheckBox zipCheckBox;
     private final CheckBox librariesCheckBox;
     private final CheckBox gradleProjectCheckBox;
+    private final CheckBox repairSourcesCheckBox;
 
     public McDeobOptionsPanel() {
         super(10, 10);
@@ -32,6 +33,7 @@ public class McDeobOptionsPanel extends FlowPane {
         this.zipCheckBox = new CheckBox("Zip");
         this.librariesCheckBox = new CheckBox("Libraries");
         this.gradleProjectCheckBox = new CheckBox("Gradle Project");
+        this.repairSourcesCheckBox = new CheckBox("Repair Sources");
         this.decompilerComboBox = this.createDecompilerComboBox();
 
         this.configureOption(this.remapCheckBox);
@@ -39,15 +41,18 @@ public class McDeobOptionsPanel extends FlowPane {
         this.configureOption(this.zipCheckBox);
         this.configureOption(this.librariesCheckBox);
         this.configureOption(this.gradleProjectCheckBox);
+        this.configureOption(this.repairSourcesCheckBox);
 
         this.remapCheckBox.setSelected(true);
         this.decompileCheckBox.setSelected(true);
         this.zipCheckBox.setSelected(true);
         this.librariesCheckBox.setSelected(false);
         this.gradleProjectCheckBox.setSelected(false);
+        this.repairSourcesCheckBox.setSelected(false);
 
         this.decompileCheckBox.selectedProperty().addListener((obs, oldV, newV) -> this.updateDependencies());
         this.gradleProjectCheckBox.selectedProperty().addListener((obs, oldV, newV) -> this.updateDependencies());
+        this.librariesCheckBox.selectedProperty().addListener((obs, oldV, newV) -> this.updateDependencies());
         this.updateDependencies();
 
         final HBox decompilerRow = new HBox(8);
@@ -64,7 +69,8 @@ public class McDeobOptionsPanel extends FlowPane {
                         this.decompileCheckBox,
                         this.zipCheckBox,
                         this.librariesCheckBox,
-                        this.gradleProjectCheckBox);
+                        this.gradleProjectCheckBox,
+                        this.repairSourcesCheckBox);
     }
 
     private void configureOption(final CheckBox box) {
@@ -86,6 +92,7 @@ public class McDeobOptionsPanel extends FlowPane {
         if (gradleSelected) {
             this.decompileCheckBox.setSelected(true);
             this.librariesCheckBox.setSelected(true);
+            this.repairSourcesCheckBox.setSelected(true);
         }
 
         if (!this.decompileCheckBox.isSelected()) {
@@ -96,6 +103,14 @@ public class McDeobOptionsPanel extends FlowPane {
         this.decompileCheckBox.setDisable(gradleSelected);
         this.librariesCheckBox.setDisable(gradleSelected);
         this.decompilerComboBox.setDisable(!this.decompileCheckBox.isSelected());
+
+        // Repairing type-checks the sources, which needs both the sources and what they compile
+        // against; a generated project additionally has no use for sources that do not build.
+        final boolean canRepair = this.decompileCheckBox.isSelected() && this.librariesCheckBox.isSelected();
+        if (!canRepair) {
+            this.repairSourcesCheckBox.setSelected(false);
+        }
+        this.repairSourcesCheckBox.setDisable(gradleSelected || !canRepair);
     }
 
     public void setRemapVisible(final boolean visible) {
@@ -111,6 +126,7 @@ public class McDeobOptionsPanel extends FlowPane {
                 .zipDecompileOutput(this.decompileCheckBox.isSelected() && this.zipCheckBox.isSelected())
                 .downloadLibraries(this.librariesCheckBox.isSelected())
                 .setupGradleProject(this.gradleProjectCheckBox.isSelected())
+                .repairSources(this.repairSourcesCheckBox.isSelected())
                 .decompilerType(
                         this.decompilerComboBox.getValue() == null
                                 ? DEFAULT_DECOMPILER
@@ -125,6 +141,7 @@ public class McDeobOptionsPanel extends FlowPane {
         this.zipCheckBox.setDisable(disable);
         this.librariesCheckBox.setDisable(disable);
         this.gradleProjectCheckBox.setDisable(disable);
+        this.repairSourcesCheckBox.setDisable(disable);
 
         if (!disable) {
             this.updateDependencies();

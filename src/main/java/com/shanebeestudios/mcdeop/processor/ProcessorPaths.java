@@ -15,6 +15,7 @@ record ProcessorPaths(
         Path decompiledJarPath,
         Path decompiledZipPath,
         Path librariesPath,
+        Path compileLibrariesPath,
         Path gradleProjectPath) {
 
     static ProcessorPaths create(final ResourceRequest request) {
@@ -38,6 +39,7 @@ record ProcessorPaths(
                 dataFolderPath.resolve("decompiled"),
                 dataFolderPath.resolve("decompiled.zip"),
                 dataFolderPath.resolve("libraries"),
+                dataFolderPath.resolve("compile-libraries"),
                 dataFolderPath.resolve("gradle-project"));
     }
 }

@@ -72,6 +72,13 @@ public class McDeobCommand implements Callable<Integer> {
     private boolean gradleProject;
 
     @Option(
+            names = "--repair-sources",
+            negatable = true,
+            description = "Type-check the decompiled sources and repair the defects the decompiler left behind"
+                    + " (default: on when --gradle-project is used). Requires a JDK and --libraries.")
+    private Boolean repairSources;
+
+    @Option(
             names = "--versions",
             description = "Prints a list of all Minecraft versions available to deobfuscate",
             help = true)
@@ -141,12 +148,26 @@ public class McDeobCommand implements Callable<Integer> {
             return 1;
         }
 
+        // A generated project is only useful if it builds, so repairing is the default there. On its
+        // own the flag still works, for callers that want repaired sources without a project.
+        final boolean repair = this.repairSources != null ? this.repairSources : this.gradleProject;
+        if (repair && !this.decompile) {
+            log.error("--repair-sources requires --decompile");
+            return 1;
+        }
+
+        if (repair && !this.libraries) {
+            log.error("--repair-sources requires --libraries");
+            return 1;
+        }
+
         final ProcessorOptions processorOptions = ProcessorOptions.builder()
                 .remap(shouldRemap)
                 .decompile(this.decompile)
                 .zipDecompileOutput(this.zip && this.decompile)
                 .downloadLibraries(this.libraries)
                 .setupGradleProject(this.gradleProject)
+                .repairSources(repair)
                 .decompilerType(decompilerType)
                 .build();
 

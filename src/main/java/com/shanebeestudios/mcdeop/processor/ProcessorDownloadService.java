@@ -5,9 +5,11 @@ import com.shanebeestudios.mcdeop.util.DurationTracker;
 import com.shanebeestudios.mcdeop.util.FileUtil;
 import de.timmi6790.launchermeta.data.release.LibraryArtifact;
 import java.io.IOException;
+import java.net.URI;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.CompletableFuture;
@@ -23,6 +25,10 @@ import org.jetbrains.annotations.Nullable;
 
 @Slf4j
 final class ProcessorDownloadService {
+
+    /** Where the annotation libraries Mojang compiles against are published. */
+    private static final String MAVEN_CENTRAL = "https://repo1.maven.org/maven2/";
+
     private final ResourceRequest request;
     private final OkHttpClient httpClient;
     private final ProcessorPaths paths;
@@ -105,6 +111,40 @@ final class ProcessorDownloadService {
         }
     }
 
+    /**
+     * Fetches the compile-time dependencies the decompiled sources need.
+     *
+     * <p>These are the annotation libraries Mojang compiles against without shipping them, so they
+     * appear in no manifest and have to come from Maven Central. A download that fails is skipped
+     * rather than fatal: the sources still compile apart from their annotated declarations, and a
+     * partial type-check is more useful than none.
+     *
+     * @param coordinates Maven coordinates in {@code group:artifact:version} form
+     * @return the jars that could be fetched
+     */
+    List<Path> downloadCompileDependencies(final List<String> coordinates) {
+        final List<Path> jars = new ArrayList<>(coordinates.size());
+        for (final String coordinate : coordinates) {
+            final String[] parts = coordinate.split(":");
+            if (parts.length != 3) {
+                log.warn("Ignoring malformed compile-time dependency coordinate '{}'", coordinate);
+                continue;
+            }
+
+            final String fileName = parts[1] + "-" + parts[2] + ".jar";
+            final Path target = this.paths.compileLibrariesPath().resolve(fileName);
+            final String url = String.format(
+                    "%s%s/%s/%s/%s", MAVEN_CENTRAL, parts[0].replace('.', '/'), parts[1], parts[2], fileName);
+            try {
+                this.downloadFile(URI.create(url).toURL(), target, "compile-time dependency");
+                jars.add(target);
+            } catch (final IOException exception) {
+                log.warn("Failed to download compile-time dependency {}; continuing without it", coordinate, exception);
+            }
+        }
+        return jars;
+    }
+
     List<Path> resolveDecompilerLibraries(final ProcessorOptions options, final Decompiler decompiler)
             throws IOException {
         if (!options.downloadLibraries()) {
@@ -131,7 +171,7 @@ final class ProcessorDownloadService {
         return libraries;
     }
 
-    private List<Path> getDownloadedLibraryJars() throws IOException {
+    List<Path> getDownloadedLibraryJars() throws IOException {
         if (!Files.isDirectory(this.paths.librariesPath())) {
             return List.of();
         }
@@ -152,7 +192,7 @@ final class ProcessorDownloadService {
     private void downloadFile(final URL url, final Path path, final String fileType) throws IOException {
         try (final DurationTracker ignored = new DurationTracker(
                 duration -> log.info("Successfully downloaded {} file in {}!", fileType, duration))) {
-            log.info("Downloading {} file from Mojang...", fileType);
+            log.info("Downloading {} file...", fileType);
             final Request httpRequest = new Request.Builder().url(url).build();
 
             try (final Response response = this.httpClient.newCall(httpRequest).execute()) {

@@ -15,7 +15,7 @@ files.
 4. In the UI:
     - Choose `Client` or `Server`
     - Pick a Minecraft version
-    - Enable the options you want (`Remap`, `Decompile`, `Zip`)
+    - Enable the options you want (`Remap`, `Decompile`, `Zip`, `Repair Sources`)
     - Click start and wait for completion
 5. Open the output folder shown by the app.
 
@@ -71,6 +71,34 @@ This section is for contributors and power users who want to run McDeob from sou
 
 - `--gradle-project` requires `--decompile` and `--libraries`.
 - `--decompiler` supports `vineflower` (default), `fernflower`, `cfr`, and `jadx`.
+
+### Source Repair
+
+Decompilers describe what a class file does, not the source it was compiled from. Wherever the
+compiler erased something the two differ, and the output stops being a legal Java program: casts
+between two parameterisations of a type leave no trace in the bytecode and are dropped, variables
+that lived in separate scopes collide once those scopes are merged, and desugared record patterns
+leave temporaries with no declaration.
+
+`--repair-sources` type-checks the decompiled tree and repairs what the compiler rejects, one class
+of defect at a time, until it compiles or nothing more is within reach. It is on by default with
+`--gradle-project`, which is the mode whose output is meant to build, and can be turned off with
+`--no-repair-sources`.
+
+```bash
+./gradlew run --args="--type client --version 1.21.4 --decompile --libraries --repair-sources"
+```
+
+- Requires `--decompile` and `--libraries`; type-checking needs both the sources and what they
+  compile against.
+- Requires a JDK at least as new as the release the sources target. Running on a JDK it is used
+  directly; a native image has no compiler of its own and borrows one from `JAVA_HOME`, the `PATH`,
+  or a Gradle toolchain under `~/.gradle/jdks`.
+- Errors that no repair covers are logged and left in place, so a version that hits an unfamiliar
+  defect still produces output.
+- Note that a native image also decompiles without the JDK type hierarchy, because the `jrt`
+  filesystem it needs is not available there. That yields noticeably more defects to begin with than
+  a `.jar` run does, so a `.jar` run gives the best chance of a project that builds.
 
 The generated project also declares the annotation libraries Mojang compiles against but does not
 publish as runtime libraries, such as `org.jetbrains:annotations` and `com.google.code.findbugs:jsr305`.
