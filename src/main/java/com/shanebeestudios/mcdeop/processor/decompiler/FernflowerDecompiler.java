@@ -1,15 +1,19 @@
 package com.shanebeestudios.mcdeop.processor.decompiler;
 
+import com.shanebeestudios.mcdeop.util.NativeImageUtil;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import org.jetbrains.java.decompiler.main.decompiler.ConsoleDecompiler;
 
 public class FernflowerDecompiler implements Decompiler {
-    private static final String[] LEGACY_OPTIONS = {
-        // Preserve native-image compatibility by avoiding runtime module probing.
-        "--include-runtime=0"
-    };
+    /**
+     * Reading the JDK's type hierarchy yields better output, but the runtime scan needs the {@code jrt} filesystem
+     * provider that native images do not ship.
+     */
+    private static String includeRuntimeOption() {
+        return NativeImageUtil.isNativeImage() ? "--include-runtime=0" : "--include-runtime=1";
+    }
 
     @Override
     public void decompile(final Path jarPath, final Path outputDir) {
@@ -18,8 +22,8 @@ public class FernflowerDecompiler implements Decompiler {
 
     @Override
     public void decompile(final Path jarPath, final Path outputDir, final List<Path> libraries) {
-        final List<String> args = new ArrayList<>(LEGACY_OPTIONS.length + libraries.size() + 2);
-        args.addAll(List.of(LEGACY_OPTIONS));
+        final List<String> args = new ArrayList<>(libraries.size() + 3);
+        args.add(includeRuntimeOption());
         for (final Path library : libraries) {
             args.add("--add-external=" + library.toAbsolutePath());
         }
