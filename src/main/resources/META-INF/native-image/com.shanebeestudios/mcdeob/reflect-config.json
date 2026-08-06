@@ -4,6 +4,14 @@
     "allDeclaredConstructors": true
   },
   {
+    "_comment": "mixinStandardHelpOptions makes picocli reflect over its own help mixin. Without this the native image strips the mixin's annotations and every CLI invocation fails before parsing.",
+    "name": "picocli.CommandLine$AutoHelpMixin",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allDeclaredConstructors": true,
+    "queryAllDeclaredMethods": true
+  },
+  {
     "name": "io.github.lxgaming.reconstruct.common.manager.TransformerManager",
     "allDeclaredFields": true
   },
