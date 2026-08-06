@@ -15,14 +15,18 @@ record ProcessorPaths(
         Path decompiledJarPath,
         Path decompiledZipPath,
         Path librariesPath,
-        Path gradleProjectPath) {
+        Path gradleProjectPath,
+        Path machePath,
+        Path toolCachePath,
+        Path javaRuntimePath) {
 
     static ProcessorPaths create(final ResourceRequest request) {
         final String versionFolder = String.format(
                 "%s-%s",
                 request.type().name().toLowerCase(Locale.ENGLISH),
                 request.getVersion().id());
-        final Path dataFolderPath = Util.getBaseDataFolder().resolve(versionFolder);
+        final Path baseFolderPath = Util.getBaseDataFolder();
+        final Path dataFolderPath = baseFolderPath.resolve(versionFolder);
         try {
             Files.createDirectories(dataFolderPath);
         } catch (final IOException exception) {
@@ -38,6 +42,11 @@ record ProcessorPaths(
                 dataFolderPath.resolve("decompiled"),
                 dataFolderPath.resolve("decompiled.zip"),
                 dataFolderPath.resolve("libraries"),
-                dataFolderPath.resolve("gradle-project"));
+                dataFolderPath.resolve("gradle-project"),
+                dataFolderPath.resolve("mache"),
+                // The downloaded toolchain and Java runtime are identical for every version, so they live
+                // beside the version folders instead of inside them.
+                baseFolderPath.resolve("tool-cache"),
+                baseFolderPath.resolve("java-runtime"));
     }
 }

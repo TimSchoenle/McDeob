@@ -2,6 +2,8 @@ package com.shanebeestudios.mcdeop.processor;
 
 import com.shanebeestudios.mcdeop.processor.decompiler.Decompiler;
 import com.shanebeestudios.mcdeop.processor.decompiler.DecompilerType;
+import com.shanebeestudios.mcdeop.processor.mache.MachePipeline;
+import com.shanebeestudios.mcdeop.processor.mache.MacheUnavailableException;
 import com.shanebeestudios.mcdeop.processor.remapper.ReconstructRemapper;
 import com.shanebeestudios.mcdeop.processor.remapper.Remapper;
 import com.shanebeestudios.mcdeop.util.DurationTracker;
@@ -30,6 +32,7 @@ public class Processor {
     private final ProcessorStatusReporter statusReporter;
     private final ProcessorDownloadService downloadService;
     private final GradleProjectWriter gradleProjectWriter;
+    private final OkHttpClient httpClient;
 
     private Processor(
             final ResourceRequest request,
@@ -46,8 +49,8 @@ public class Processor {
         this.paths = ProcessorPaths.create(request);
         this.statusReporter = new ProcessorStatusReporter(responseConsumer);
 
-        final OkHttpClient httpClient = RequestModule.createHttpClient();
-        this.downloadService = new ProcessorDownloadService(request, httpClient, this.paths, this.statusReporter);
+        this.httpClient = RequestModule.createHttpClient();
+        this.downloadService = new ProcessorDownloadService(request, this.httpClient, this.paths, this.statusReporter);
         this.gradleProjectWriter = new GradleProjectWriter(request, this.paths);
     }
 
@@ -83,6 +86,12 @@ public class Processor {
     }
 
     private boolean validateOptions() {
+        // The mache pipeline always remaps, decompiles and extracts the server's libraries, so the options that
+        // guard those steps in the standard pipeline cannot be unmet.
+        if (this.options.isMache()) {
+            return this.validateMacheOptions();
+        }
+
         if (this.options.setupGradleProject() && !this.options.decompile()) {
             log.error("Gradle project setup requires decompile to be enabled.");
             this.statusReporter.send("Gradle setup requires decompile to be enabled.");
@@ -93,6 +102,29 @@ public class Processor {
             log.error("Gradle project setup requires downloading libraries.");
             this.statusReporter.send("Gradle setup requires library downloads.");
             return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Checks the request against what mache covers.
+     *
+     * @return {@code false} with the reason reported if the request cannot be served
+     */
+    private boolean validateMacheOptions() {
+        if (this.request.type() != SourceType.SERVER) {
+            log.error("The mache pipeline only supports server jars, because PaperMC only publishes server builds.");
+            this.statusReporter.send("Mache only supports the server target.");
+            return false;
+        }
+
+        if (!this.options.remap() || !this.options.decompile()) {
+            log.info("The mache pipeline always remaps and decompiles; those options do not apply to it.");
+        }
+        if (this.options.downloadLibraries()) {
+            log.info("The mache pipeline takes the server's libraries from the bundler, so no libraries are"
+                    + " downloaded separately.");
         }
 
         return true;
@@ -127,13 +159,45 @@ public class Processor {
                     jarPath,
                     this.paths.decompiledJarPath(),
                     this.downloadService.resolveDecompilerLibraries(this.options, this.decompiler));
+        }
+    }
 
-            if (this.options.zipDecompileOutput()) {
-                log.info("Packing decompiled files into {}", this.paths.decompiledZipPath());
-                this.statusReporter.send("Packing decompiled files ...");
-                FileUtil.remove(this.paths.decompiledZipPath());
-                FileUtil.zip(this.paths.decompiledJarPath(), this.paths.decompiledZipPath());
-            }
+    private void zipDecompiledOutput() throws IOException {
+        log.info("Packing decompiled files into {}", this.paths.decompiledZipPath());
+        this.statusReporter.send("Packing decompiled files ...");
+        FileUtil.remove(this.paths.decompiledZipPath());
+        FileUtil.zip(this.paths.decompiledJarPath(), this.paths.decompiledZipPath());
+    }
+
+    /**
+     * Runs PaperMC's pipeline in place of the remap and decompile steps.
+     *
+     * @return {@code false} with the reason reported if mache cannot serve this version
+     */
+    private boolean runMachePipeline() throws IOException {
+        final MachePipeline.Request pipelineRequest = new MachePipeline.Request(
+                this.request.getVersion().id(),
+                this.paths.jarPath(),
+                this.paths.mappingsPath(),
+                this.paths.decompiledJarPath(),
+                this.paths.librariesPath(),
+                this.paths.machePath(),
+                this.paths.toolCachePath(),
+                this.paths.javaRuntimePath(),
+                this.options.javaHome());
+
+        try {
+            final MachePipeline.Result result =
+                    new MachePipeline(this.httpClient, this.statusReporter::send).run(pipelineRequest);
+            log.info(
+                    "mache {} produced sources in {}",
+                    result.bundle().artifact().version(),
+                    this.paths.decompiledJarPath());
+            return true;
+        } catch (final MacheUnavailableException exception) {
+            log.error(exception.getMessage());
+            this.statusReporter.send(exception.getMessage());
+            return false;
         }
     }
 
@@ -172,6 +236,63 @@ public class Processor {
         }
     }
 
+    /**
+     * Runs McDeob's own remap and decompile steps.
+     *
+     * @return whether the decompiled sources directory was produced
+     */
+    private boolean runStandardPipeline() throws IOException {
+        if (this.options.downloadLibraries()) {
+            this.downloadService.downloadLibraries();
+        }
+
+        boolean remapped = false;
+        if (this.options.remap() && this.downloadService.getMappingsUrl() != null) {
+            this.remapJar();
+            remapped = true;
+        }
+
+        final Path decompileJarPath =
+                remapped ? this.paths.remappedJar() : this.prepareServerJarForDecompile(this.paths.jarPath(), false);
+
+        if (this.options.remap() && !remapped) {
+            this.reportUnmappedVersion(decompileJarPath);
+        }
+
+        if (!this.options.decompile()) {
+            return false;
+        }
+
+        this.decompileJar(decompileJarPath);
+        return true;
+    }
+
+    /**
+     * Explains why a requested remap did not happen.
+     *
+     * <p>Mojang stopped publishing mappings once it stopped obfuscating the server, so a missing mappings file
+     * usually means there is nothing to remap rather than that something went wrong. The jar itself is the only
+     * reliable way to tell the two apart.
+     *
+     * @param jarPath the jar that would have been remapped
+     */
+    private void reportUnmappedVersion(final Path jarPath) throws IOException {
+        final String version = this.request.getVersion().id();
+        if (ObfuscationProbe.looksObfuscated(jarPath)) {
+            log.warn(
+                    "Mojang publishes no mappings for {}, and its jar is obfuscated, so readable names cannot be"
+                            + " recovered for it.",
+                    version);
+            this.statusReporter.send(String.format("No mappings published for %s.", version));
+            return;
+        }
+
+        log.info(
+                "Mojang publishes no mappings for {} because its jar already ships readable names, so no remapping"
+                        + " is needed.",
+                version);
+    }
+
     public boolean init() {
         if (!this.isValid() || !this.validateOptions()) {
             return false;
@@ -191,26 +312,18 @@ public class Processor {
                             this.downloadService.downloadJar(), this.downloadService.downloadMappings())
                     .join();
 
-            if (this.options.downloadLibraries()) {
-                this.downloadService.downloadLibraries();
-            }
-
-            boolean remapped = false;
-            if (this.options.remap()) {
-                if (this.downloadService.getMappingsUrl() != null) {
-                    this.remapJar();
-                    remapped = true;
-                } else {
-                    log.warn(
-                            "Remapping requested but no mappings found for version {}",
-                            this.request.getVersion().id());
+            final boolean producedSources;
+            if (this.options.isMache()) {
+                if (!this.runMachePipeline()) {
+                    return false;
                 }
+                producedSources = true;
+            } else {
+                producedSources = this.runStandardPipeline();
             }
 
-            if (this.options.decompile()) {
-                Path decompileJarPath = remapped ? this.paths.remappedJar() : this.paths.jarPath();
-                decompileJarPath = this.prepareServerJarForDecompile(decompileJarPath, remapped);
-                this.decompileJar(decompileJarPath);
+            if (producedSources && this.options.zipDecompileOutput()) {
+                this.zipDecompiledOutput();
             }
 
             if (this.options.setupGradleProject()) {

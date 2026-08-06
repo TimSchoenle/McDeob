@@ -399,7 +399,8 @@
     -fx-background-color: white;
 }
 
-.decompiler-row {
+.decompiler-row,
+.pipeline-row {
     -fx-background-color: #f7fbfe;
     -fx-border-color: #c6d3de;
     -fx-border-radius: 999;
@@ -408,12 +409,14 @@
     -fx-alignment: center-left;
 }
 
-.decompiler-label {
+.decompiler-label,
+.pipeline-label {
     -fx-text-fill: #264157;
     -fx-font-weight: 700;
 }
 
-.decompiler-selection {
+.decompiler-selection,
+.pipeline-selection {
     -fx-pref-height: 32;
 }
 

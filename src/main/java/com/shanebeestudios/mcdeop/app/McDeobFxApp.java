@@ -10,6 +10,7 @@ import com.shanebeestudios.mcdeop.app.components.McDeobUpdateNotification;
 import com.shanebeestudios.mcdeop.app.components.McDeobVersionSelection;
 import com.shanebeestudios.mcdeop.processor.Processor;
 import com.shanebeestudios.mcdeop.processor.ResourceRequest;
+import com.shanebeestudios.mcdeop.processor.SourceType;
 import com.shanebeestudios.mcdeop.util.GeneratedConstant;
 import com.shanebeestudios.mcdeop.util.GithubReleaseChecker;
 import com.shanebeestudios.mcdeop.util.Util;
@@ -101,7 +102,7 @@ public class McDeobFxApp extends Application {
         this.typeSelection.addSelectionListener(() -> {
             final Version selectedVersion = this.versionSelection != null ? this.versionSelection.getValue() : null;
             if (selectedVersion != null) {
-                this.updateRemapVisibility(selectedVersion);
+                this.updateOptionAvailability(selectedVersion);
             }
         });
 
@@ -111,7 +112,7 @@ public class McDeobFxApp extends Application {
         this.versionSelection = new McDeobVersionSelection(versionManager);
         this.versionSelection.getSelectionModel().selectedItemProperty().addListener((obs, oldV, newV) -> {
             if (newV != null) {
-                this.updateRemapVisibility(newV);
+                this.updateOptionAvailability(newV);
             }
         });
         final VBox versionSelectionRow = new VBox(8);
@@ -129,7 +130,7 @@ public class McDeobFxApp extends Application {
                 .addAll(
                         this.createFieldRow("Target", this.typeSelection),
                         this.createFieldRow("Minecraft Version", versionSelectionRow),
-                        this.createFieldRow("Pipeline Steps", this.optionsPanel));
+                        this.createFieldRow("Options", this.optionsPanel));
 
         this.statusBox = new McDeobStatusBox();
         HBox.setHgrow(this.statusBox, Priority.ALWAYS);
@@ -166,7 +167,7 @@ public class McDeobFxApp extends Application {
         // Initial check for the already selected version (from constructor)
         final Version current = this.versionSelection.getValue();
         if (current != null) {
-            this.updateRemapVisibility(current);
+            this.updateOptionAvailability(current);
         }
 
         final ScrollPane appScroll = new ScrollPane(root);
@@ -211,8 +212,14 @@ public class McDeobFxApp extends Application {
         }
     }
 
-    private void updateRemapVisibility(final Version version) {
+    /**
+     * Syncs the option controls with what the selected target and version support.
+     *
+     * @param version the selected Minecraft version
+     */
+    private void updateOptionAvailability(final Version version) {
         this.optionsPanel.setRemapVisible(versionManager.hasMappings(version));
+        this.optionsPanel.setMacheSupported(this.typeSelection.getSelectedType() == SourceType.SERVER);
     }
 
     private HBox createFieldRow(final String labelText, final Node content) {

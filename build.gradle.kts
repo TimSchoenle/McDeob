@@ -47,6 +47,9 @@ dependencies {
     implementation(libs.picocli)
     implementation(libs.slf4j.simple)
     implementation(libs.okhttp)
+    implementation(libs.jackson.databind)
+    implementation(libs.diffpatch)
+    implementation(libs.commons.compress)
 
     annotationProcessor(libs.picocli.codegen)
 }

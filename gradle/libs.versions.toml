@@ -6,6 +6,8 @@ vineflower = "1.12.0"
 jadx = "1.5.6"
 slf4j = "2.0.18"
 picocli = "4.7.7"
+diffpatch = "1.5.0.30"
+commonsCompress = "1.28.0"
 
 # annotations referenced by decompiled sources, only used to generate the base project.
 # these are the newest known versions; older ones are pinned per release date in the registry
@@ -31,6 +33,10 @@ jadx-core = { module = "io.github.skylot:jadx-core", version.ref = "jadx" }
 jadx-java-input = { module = "io.github.skylot:jadx-java-input", version.ref = "jadx" }
 slf4j-simple = { module = "org.slf4j:slf4j-simple", version.ref = "slf4j" }
 picocli = { module = "info.picocli:picocli", version.ref = "picocli" }
+# Applies mache's unified diffs; the same library and version PaperMC's own sculptor plugin uses,
+# so patches that apply for Paper apply here too.
+diffpatch = { module = "io.codechicken:DiffPatch", version.ref = "diffpatch" }
+commons-compress = { module = "org.apache.commons:commons-compress", version.ref = "commonsCompress" }
 picocli-codegen = { module = "info.picocli:picocli-codegen", version.ref = "picocli" }
 jetbrains-annotations = { module = "org.jetbrains:annotations", version.ref = "jetbrainsAnnotations" }
 jsr305 = { module = "com.google.code.findbugs:jsr305", version.ref = "jsr305" }
