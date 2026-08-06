@@ -70,7 +70,7 @@ This section is for contributors and power users who want to run McDeob from sou
 ```
 
 - `--gradle-project` requires `--decompile` and `--libraries`.
-- `--decompiler` supports `vineflower` (default), `fernflower`, `cfr`, and `jadx`.
+- `--decompiler` supports `vineflower` (default), `fernflower`, and `jadx`.
 
 The generated project also declares the annotation libraries Mojang compiles against but does not
 publish as runtime libraries, such as `org.jetbrains:annotations` and `com.google.code.findbugs:jsr305`.

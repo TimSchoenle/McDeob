@@ -1,9 +1,10 @@
 package com.shanebeestudios.mcdeop.processor.decompiler;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 public enum DecompilerType {
     VINEFLOWER("vineflower", "Vineflower"),
@@ -42,7 +43,23 @@ public enum DecompilerType {
     }
 
     public static String supportedValues() {
-        return Arrays.stream(values()).map(DecompilerType::cliValue).collect(Collectors.joining(", "));
+        return String.join(", ", cliValues());
+    }
+
+    /**
+     * The values {@link #fromValue(String)} accepts.
+     *
+     * <p>Derived from the constants rather than written out, so the command line help cannot come to
+     * advertise an engine that does not exist.
+     *
+     * @return every supported CLI value, in declaration order
+     */
+    public static List<String> cliValues() {
+        final List<String> values = new ArrayList<>(values().length);
+        for (final DecompilerType type : values()) {
+            values.add(type.cliValue);
+        }
+        return values;
     }
 
     @Override
