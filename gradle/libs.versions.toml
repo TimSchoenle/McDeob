@@ -11,7 +11,7 @@ picocli = "4.7.7"
 # these are the newest known versions; older ones are pinned per release date in the registry
 jetbrainsAnnotations = "26.1.0"
 jsr305 = "3.0.2"
-jspecify = "1.0.0"
+jspecify = "1.0.1"
 
 # plugins
 lombok = "9.5.0"
