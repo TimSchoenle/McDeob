@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.12.8](https://github.com/TimSchoenle/McDeob/compare/v2.12.7...v2.12.8) (2026-08-06)
+
+
+### Bug Fixes
+
+* **decompiler:** stop Vineflower emitting invalid pattern-matching switches ([#295](https://github.com/TimSchoenle/McDeob/issues/295)) ([9adcf3c](https://github.com/TimSchoenle/McDeob/commit/9adcf3c620719166c28f30e183f189e9dbe77c26))
+
 ## [2.12.7](https://github.com/TimSchoenle/McDeob/compare/v2.12.6...v2.12.7) (2026-07-19)
 
 
