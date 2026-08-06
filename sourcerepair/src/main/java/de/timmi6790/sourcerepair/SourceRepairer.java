@@ -61,6 +61,8 @@ public final class SourceRepairer {
                 new StaticContextTypeVariableRepair(),
                 new FunctionalInterfaceRepair(sourceTree),
                 new ArgumentCastRepair(),
+                new TypeWitnessRepair(),
+                new RawConstructorRepair(sourceTree),
                 new MissingCastRepair());
     }
 
