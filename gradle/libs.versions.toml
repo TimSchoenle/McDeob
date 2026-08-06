@@ -7,6 +7,12 @@ jadx = "1.5.6"
 slf4j = "2.0.18"
 picocli = "4.7.7"
 
+# annotations referenced by decompiled sources, only used to generate the base project.
+# these are the newest known versions; older ones are pinned per release date in the registry
+jetbrainsAnnotations = "26.0.2"
+jsr305 = "3.0.2"
+jspecify = "1.0.0"
+
 # plugins
 lombok = "9.5.0"
 spotless = "8.9.0"
@@ -26,6 +32,9 @@ jadx-java-input = { module = "io.github.skylot:jadx-java-input", version.ref = "
 slf4j-simple = { module = "org.slf4j:slf4j-simple", version.ref = "slf4j" }
 picocli = { module = "info.picocli:picocli", version.ref = "picocli" }
 picocli-codegen = { module = "info.picocli:picocli-codegen", version.ref = "picocli" }
+jetbrains-annotations = { module = "org.jetbrains:annotations", version.ref = "jetbrainsAnnotations" }
+jsr305 = { module = "com.google.code.findbugs:jsr305", version.ref = "jsr305" }
+jspecify = { module = "org.jspecify:jspecify", version.ref = "jspecify" }
 
 [plugins]
 lombok = { id = "io.freefair.lombok", version.ref = "lombok" }

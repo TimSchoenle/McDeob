@@ -264,6 +264,18 @@ buildConfig {
         },
     )
     buildConfigField(
+        "JETBRAINS_ANNOTATIONS_VERSION",
+        provider { libs.versions.jetbrainsAnnotations.get() },
+    )
+    buildConfigField(
+        "JSR305_VERSION",
+        provider { libs.versions.jsr305.get() },
+    )
+    buildConfigField(
+        "JSPECIFY_VERSION",
+        provider { libs.versions.jspecify.get() },
+    )
+    buildConfigField(
         "GITHUB_REPO_NAME",
         provider {
             getGitRepoName()

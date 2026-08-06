@@ -72,6 +72,12 @@ This section is for contributors and power users who want to run McDeob from sou
 - `--gradle-project` requires `--decompile` and `--libraries`.
 - `--decompiler` supports `vineflower` (default), `fernflower`, `cfr`, and `jadx`.
 
+The generated project also declares the annotation libraries Mojang compiles against but does not
+publish as runtime libraries, such as `org.jetbrains:annotations` and `com.google.code.findbugs:jsr305`.
+They are detected from the decompiled imports and resolved from Maven Central, pinned to the version
+that was current when the Minecraft version released. Imports that cannot be resolved are logged and
+listed in the generated `README.md`.
+
 ### Native Build (GluonFX)
 
 ```bash
