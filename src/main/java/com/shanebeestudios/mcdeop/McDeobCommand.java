@@ -7,6 +7,7 @@ import com.shanebeestudios.mcdeop.processor.SourceType;
 import com.shanebeestudios.mcdeop.processor.decompiler.DecompilerType;
 import de.timmi6790.launchermeta.data.version.Version;
 import java.io.IOException;
+import java.util.Iterator;
 import java.util.Optional;
 import java.util.concurrent.Callable;
 import lombok.extern.slf4j.Slf4j;
@@ -32,6 +33,7 @@ public class McDeobCommand implements Callable<Integer> {
             names = "--remap",
             negatable = true,
             defaultValue = "true",
+            fallbackValue = "true",
             description = "Remap the obfuscated source (default: ${DEFAULT-VALUE})")
     private boolean remap = true;
 
@@ -39,6 +41,7 @@ public class McDeobCommand implements Callable<Integer> {
             names = "--decompile",
             negatable = true,
             defaultValue = "true",
+            fallbackValue = "true",
             description = "Decompile classes into source files (default: ${DEFAULT-VALUE})")
     private boolean decompile = true;
 
@@ -46,20 +49,22 @@ public class McDeobCommand implements Callable<Integer> {
             names = "--zip",
             negatable = true,
             defaultValue = "true",
+            fallbackValue = "true",
             description = "Zip decompiled output (default: ${DEFAULT-VALUE})")
     private boolean zip = true;
 
     @Option(
             names = "--decompiler",
             defaultValue = "vineflower",
-            description =
-                    "Decompiler engine to use (supported: vineflower, fernflower, cfr, jadx; default: ${DEFAULT-VALUE})")
+            completionCandidates = DecompilerCandidates.class,
+            description = "Decompiler engine to use (supported: ${COMPLETION-CANDIDATES}; default: ${DEFAULT-VALUE})")
     private String decompiler;
 
     @Option(
             names = "--libraries",
             negatable = true,
             defaultValue = "false",
+            fallbackValue = "true",
             description = "Download all release libraries (default: ${DEFAULT-VALUE})")
     private boolean libraries;
 
@@ -67,6 +72,7 @@ public class McDeobCommand implements Callable<Integer> {
             names = "--gradle-project",
             negatable = true,
             defaultValue = "false",
+            fallbackValue = "true",
             description =
                     "Generate a base Gradle project using decompiled sources and downloaded libraries (default: ${DEFAULT-VALUE})")
     private boolean gradleProject;
@@ -81,6 +87,14 @@ public class McDeobCommand implements Callable<Integer> {
 
     public McDeobCommand(final VersionManager versionManager) {
         this.versionManager = versionManager;
+    }
+
+    /** Takes the advertised engines from the enum, so the help cannot name one that does not exist. */
+    static class DecompilerCandidates implements Iterable<String> {
+        @Override
+        public Iterator<String> iterator() {
+            return DecompilerType.cliValues().iterator();
+        }
     }
 
     @Override
