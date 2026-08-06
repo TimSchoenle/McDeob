@@ -60,6 +60,7 @@ public final class SourceRepairer {
                 new CatchParameterRepair(),
                 new StaticContextTypeVariableRepair(),
                 new FunctionalInterfaceRepair(sourceTree),
+                new ArgumentCastRepair(),
                 new MissingCastRepair());
     }
 
@@ -150,11 +151,11 @@ public final class SourceRepairer {
     }
 
     /**
-     * Undoes the edits that left their file with more errors than it had.
+     * Undoes the edits that did not leave their file with fewer errors than it had.
      *
      * @param pending the files edited in the previous round
      * @param errorsByFile how many errors each file has now
-     * @param abandoned files to leave alone from now on; regressing files are added to it
+     * @param abandoned files to leave alone from now on; files that did not improve are added to it
      * @return how many repairs were undone
      * @throws IOException if a source file cannot be written
      */
@@ -164,14 +165,14 @@ public final class SourceRepairer {
         int undone = 0;
         for (final PendingEdit edit : pending) {
             final Path file = edit.document().file();
-            if (errorsByFile.getOrDefault(file, 0) <= edit.errorsBefore()) {
+            if (errorsByFile.getOrDefault(file, 0) < edit.errorsBefore()) {
                 continue;
             }
 
             log.debug(
                     "Reverting {}: {} error(s) after repair, {} before",
                     file.getFileName(),
-                    errorsByFile.get(file),
+                    errorsByFile.getOrDefault(file, 0),
                     edit.errorsBefore());
             edit.document().restore();
             abandoned.add(file);
