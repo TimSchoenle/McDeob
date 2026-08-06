@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.12.9](https://github.com/TimSchoenle/McDeob/compare/v2.12.8...v2.12.9) (2026-08-06)
+
+
+### Bug Fixes
+
+* **gradle-project:** resolve annotation libraries missing from the manifest ([#297](https://github.com/TimSchoenle/McDeob/issues/297)) ([81f5091](https://github.com/TimSchoenle/McDeob/commit/81f5091b0673d0a5e479791ede1ab1a5b29c1cb3))
+
 ## [2.12.8](https://github.com/TimSchoenle/McDeob/compare/v2.12.7...v2.12.8) (2026-08-06)
 
 
