@@ -1,5 +1,15 @@
 # Changelog
 
+## [2.12.10](https://github.com/TimSchoenle/McDeob/compare/v2.12.9...v2.12.10) (2026-08-11)
+
+
+### Bug Fixes
+
+* **cli:** stop --remap, --decompile and --zip meaning their opposite ([#305](https://github.com/TimSchoenle/McDeob/issues/305)) ([ce4e979](https://github.com/TimSchoenle/McDeob/commit/ce4e9798667ef32c48a9e6b0eb9d1733dfd96945))
+* **deps:** update dependency org.jetbrains:annotations to v26.0.2-1 ([#299](https://github.com/TimSchoenle/McDeob/issues/299)) ([1233ab2](https://github.com/TimSchoenle/McDeob/commit/1233ab24eb4a70c72e7833e2a801ad493cc4fd8d))
+* **deps:** update dependency org.jetbrains:annotations to v26.1.0 ([#302](https://github.com/TimSchoenle/McDeob/issues/302)) ([3d3daed](https://github.com/TimSchoenle/McDeob/commit/3d3daedbe6d5ea59b94327744e285b2c2c384a3f))
+* **deps:** update dependency org.jspecify:jspecify to v1.0.1 ([#300](https://github.com/TimSchoenle/McDeob/issues/300)) ([934f30b](https://github.com/TimSchoenle/McDeob/commit/934f30be9409511d418381f060d22953ca63f75e))
+
 ## [2.12.9](https://github.com/TimSchoenle/McDeob/compare/v2.12.8...v2.12.9) (2026-08-06)
 
 
