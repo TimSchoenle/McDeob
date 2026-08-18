@@ -7,8 +7,8 @@ jadx = "1.5.6"
 slf4j = "2.0.18"
 picocli = "4.7.7"
 javafx = "21.0.4"
-junit = "5.12.2"
-junitPlatform = "1.12.2"
+junit = "5.14.4"
+junitPlatform = "1.14.4"
 
 # annotations referenced by decompiled sources, only used to generate the base project.
 # these are the newest known versions; older ones are pinned per release date in the registry
