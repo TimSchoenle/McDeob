@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.12.11](https://github.com/TimSchoenle/McDeob/compare/v2.12.10...v2.12.11) (2026-08-18)
+
+
+### Bug Fixes
+
+* **deps:** update junit-framework monorepo (minor) ([#320](https://github.com/TimSchoenle/McDeob/issues/320)) ([82bb504](https://github.com/TimSchoenle/McDeob/commit/82bb5040a5f0b095ea04a02552f7af55354b0279))
+* verify downloads, correct Windows zips, and cover the logic with tests ([#317](https://github.com/TimSchoenle/McDeob/issues/317)) ([739b18a](https://github.com/TimSchoenle/McDeob/commit/739b18a1f14f8dafa49feb0e0294e5a6abd18a22))
+
 ## [2.12.10](https://github.com/TimSchoenle/McDeob/compare/v2.12.9...v2.12.10) (2026-08-11)
 
 

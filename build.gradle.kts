@@ -19,7 +19,7 @@ plugins {
 
 group = "com.shanebeestudios"
 // x-release-please-start-version
-version = "2.12.10"
+version = "2.12.11"
 // x-release-please-end
 description = "McDeob"
 
