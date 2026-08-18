@@ -1,6 +1,5 @@
 package com.shanebeestudios.mcdeop.processor.remapper;
 
-import com.shanebeestudios.mcdeop.processor.Cleanup;
 import com.shanebeestudios.mcdeop.processor.ReconConfig;
 import io.github.lxgaming.reconstruct.common.Reconstruct;
 import io.github.lxgaming.reconstruct.common.manager.TransformerManager;
@@ -11,7 +10,7 @@ import java.util.Set;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
-public class ReconstructRemapper implements Remapper, Cleanup {
+public class ReconstructRemapper implements Remapper {
     private static final String RECON_THREADS_PROPERTY = "mcdeob.reconstruct.threads";
 
     /**
@@ -58,6 +57,11 @@ public class ReconstructRemapper implements Remapper, Cleanup {
         reconstruct.load();
     }
 
+    /**
+     * Resolves the worker count for a remap.
+     *
+     * @return the configured override when valid, otherwise one worker per available processor
+     */
     private int resolveThreads() {
         final String configuredValue = System.getProperty(RECON_THREADS_PROPERTY);
         if (configuredValue != null && !configuredValue.isBlank()) {
@@ -66,13 +70,6 @@ public class ReconstructRemapper implements Remapper, Cleanup {
             } catch (final NumberFormatException exception) {
                 log.warn("Invalid {} value '{}', using auto thread selection", RECON_THREADS_PROPERTY, configuredValue);
             }
-        }
-
-        // Work around Reconstruct task tracking deadlock in native-image worker execution.
-        if (System.getProperty("org.graalvm.nativeimage.imagecode") != null) {
-            final int nativeThreads = Math.max(1, Runtime.getRuntime().availableProcessors());
-            log.info("Native runtime detected, using {} Reconstruct thread(s)", nativeThreads);
-            return nativeThreads;
         }
 
         return Math.max(1, Runtime.getRuntime().availableProcessors());

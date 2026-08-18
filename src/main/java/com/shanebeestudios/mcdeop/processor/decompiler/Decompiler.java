@@ -4,13 +4,23 @@ import java.nio.file.Path;
 import java.util.List;
 
 public interface Decompiler {
-    void decompile(Path jarPath, Path outputDir);
+    /**
+     * Decompiles a jar into source files.
+     *
+     * @param jarPath jar to decompile
+     * @param outputDir directory to write the sources to
+     * @param libraries jars to resolve references against, empty when none are available or the
+     *     backend does not {@linkplain #supportsExternalLibraries() support them}
+     */
+    void decompile(Path jarPath, Path outputDir, List<Path> libraries);
 
-    default void decompile(final Path jarPath, final Path outputDir, final List<Path> libraries) {
-        this.decompile(jarPath, outputDir);
-    }
-
+    /** Whether {@link #decompile} makes use of the libraries it is given. */
     default boolean supportsExternalLibraries() {
         return false;
+    }
+
+    /** Releases whatever the backend holds onto after a run. Backends without state need not override. */
+    default void cleanup() {
+        // No cleanup required by default.
     }
 }

@@ -1,18 +1,19 @@
 package com.shanebeestudios.mcdeop.processor;
 
 import com.shanebeestudios.mcdeop.processor.decompiler.Decompiler;
-import com.shanebeestudios.mcdeop.processor.decompiler.DecompilerType;
 import com.shanebeestudios.mcdeop.processor.remapper.ReconstructRemapper;
 import com.shanebeestudios.mcdeop.processor.remapper.Remapper;
 import com.shanebeestudios.mcdeop.util.DurationTracker;
 import com.shanebeestudios.mcdeop.util.FileUtil;
 import com.shanebeestudios.mcdeop.util.Util;
 import de.timmi6790.RequestModule;
+import de.timmi6790.launchermeta.data.version.Version;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import lombok.extern.slf4j.Slf4j;
@@ -39,9 +40,7 @@ public class Processor {
         this.options = options;
 
         this.remapper = new ReconstructRemapper();
-        this.decompiler = Optional.ofNullable(this.options.decompilerType())
-                .orElse(DecompilerType.VINEFLOWER)
-                .createDecompiler();
+        this.decompiler = options.decompilerTypeOrDefault().createDecompiler();
 
         this.paths = ProcessorPaths.create(request);
         this.statusReporter = new ProcessorStatusReporter(responseConsumer);
@@ -49,6 +48,19 @@ public class Processor {
         final OkHttpClient httpClient = RequestModule.createHttpClient();
         this.downloadService = new ProcessorDownloadService(request, httpClient, this.paths, this.statusReporter);
         this.gradleProjectWriter = new GradleProjectWriter(request, this.paths);
+    }
+
+    /**
+     * Resolves the directory a run for this target and version reads from and writes to.
+     *
+     * <p>Exposed so callers can point the user at the output without having to reproduce the layout.
+     *
+     * @param type the target being processed
+     * @param version the Minecraft version being processed
+     * @return the absolute output directory, which need not exist yet
+     */
+    public static Path resolveOutputDirectory(final SourceType type, final Version version) {
+        return ProcessorPaths.resolveDataFolder(type, version).toAbsolutePath();
     }
 
     public static boolean runProcessor(
@@ -64,7 +76,7 @@ public class Processor {
             log.error("Failed to run processor", e);
             return false;
         } finally {
-            Util.forceGC();
+            Util.suggestGC();
         }
     }
 
@@ -83,18 +95,12 @@ public class Processor {
     }
 
     private boolean validateOptions() {
-        if (this.options.setupGradleProject() && !this.options.decompile()) {
-            log.error("Gradle project setup requires decompile to be enabled.");
-            this.statusReporter.send("Gradle setup requires decompile to be enabled.");
+        final Optional<String> conflict = this.options.validate();
+        if (conflict.isPresent()) {
+            log.error(conflict.get());
+            this.statusReporter.send(conflict.get());
             return false;
         }
-
-        if (this.options.setupGradleProject() && !this.options.downloadLibraries()) {
-            log.error("Gradle project setup requires downloading libraries.");
-            this.statusReporter.send("Gradle setup requires library downloads.");
-            return false;
-        }
-
         return true;
     }
 
@@ -187,8 +193,7 @@ public class Processor {
                 this.statusReporter.send("Downloading JAR...");
             }
 
-            java.util.concurrent.CompletableFuture.allOf(
-                            this.downloadService.downloadJar(), this.downloadService.downloadMappings())
+            CompletableFuture.allOf(this.downloadService.downloadJar(), this.downloadService.downloadMappings())
                     .join();
 
             if (this.options.downloadLibraries()) {
@@ -224,11 +229,7 @@ public class Processor {
     }
 
     public void cleanup() {
-        if (this.remapper instanceof final Cleanup cleanup) {
-            cleanup.cleanup();
-        }
-        if (this.decompiler instanceof final Cleanup cleanup) {
-            cleanup.cleanup();
-        }
+        this.remapper.cleanup();
+        this.decompiler.cleanup();
     }
 }

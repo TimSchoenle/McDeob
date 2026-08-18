@@ -5,6 +5,7 @@ import de.timmi6790.launchermeta.data.release.ReleaseManifest;
 import de.timmi6790.launchermeta.data.version.Version;
 import java.io.IOException;
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
@@ -44,10 +45,15 @@ public class VersionManager {
 
     private List<Version> fetchVersions() {
         try {
-            return this.launcherMeta.getVersionManifest().versions().stream()
-                    .filter(this::isSupportedVersion)
-                    .sorted(Comparator.comparing(Version::releaseTime).reversed())
-                    .toList();
+            final List<Version> supported = new ArrayList<>();
+            for (final Version version : this.launcherMeta.getVersionManifest().versions()) {
+                if (this.isSupportedVersion(version)) {
+                    supported.add(version);
+                }
+            }
+
+            supported.sort(Comparator.comparing(Version::releaseTime).reversed());
+            return List.copyOf(supported);
         } catch (final IOException e) {
             log.error("Failed to fetch version manifest", e);
             return List.of();

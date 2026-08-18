@@ -8,11 +8,11 @@ import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.Enumeration;
 import java.util.HashSet;
-import java.util.Locale;
 import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.Nullable;
 
 /**
  * Indexes the packages provided by the downloaded Minecraft libraries.
@@ -23,14 +23,18 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 final class LibraryPackageIndex {
 
-    private static final String JAR_SUFFIX = ".jar";
     private static final String CLASS_SUFFIX = ".class";
 
     /**
-     * Marks platform natives, which the generated project puts on the runtime classpath only. They
-     * are excluded here so the index reflects what is actually visible at compile time.
+     * Prefix of the versioned entries in a multi-release jar. Their package is the part after the
+     * version directory, so the prefix is stripped rather than being read as part of the name.
+     *
+     * @see <a href="https://docs.oracle.com/en/java/javase/21/docs/specs/jar/jar.html">JAR spec</a>
      */
-    private static final String NATIVES_MARKER = "-natives-";
+    private static final String MULTI_RELEASE_PREFIX = "META-INF/versions/";
+
+    /** Carries no package of its own and would otherwise index as the default package. */
+    private static final String MODULE_INFO = "module-info.class";
 
     /**
      * Indexes every compile-visible library jar below the given directory.
@@ -48,7 +52,7 @@ final class LibraryPackageIndex {
         Files.walkFileTree(root, new SimpleFileVisitor<>() {
             @Override
             public FileVisitResult visitFile(final Path file, final BasicFileAttributes attributes) {
-                if (isCompileVisibleJar(file)) {
+                if (LibraryJars.isCompileVisible(file)) {
                     indexJar(file, packages);
                 }
                 return FileVisitResult.CONTINUE;
@@ -56,17 +60,6 @@ final class LibraryPackageIndex {
         });
 
         return packages;
-    }
-
-    /**
-     * Checks whether a file is a library jar that ends up on the compile classpath.
-     *
-     * @param file candidate file
-     * @return {@code true} for non-natives jars
-     */
-    private static boolean isCompileVisibleJar(final Path file) {
-        final String fileName = file.getFileName().toString().toLowerCase(Locale.ENGLISH);
-        return fileName.endsWith(JAR_SUFFIX) && !fileName.contains(NATIVES_MARKER);
     }
 
     /**
@@ -88,18 +81,46 @@ final class LibraryPackageIndex {
                     continue;
                 }
 
-                final String name = entry.getName();
-                if (!name.endsWith(CLASS_SUFFIX)) {
-                    continue;
-                }
-
-                final int lastSeparator = name.lastIndexOf('/');
-                if (lastSeparator > 0) {
-                    target.add(name.substring(0, lastSeparator).replace('/', '.'));
+                final String packageName = packageOf(entry.getName());
+                if (packageName != null) {
+                    target.add(packageName);
                 }
             }
         } catch (final IOException exception) {
             log.warn("Failed to index library jar {}; its packages may be reported as unresolved.", file, exception);
         }
+    }
+
+    /**
+     * Derives the package a class entry belongs to.
+     *
+     * <p>Versioned entries of a multi-release jar are rebased onto their real package. Reading the
+     * raw entry name instead would index {@code META-INF/versions/9/com/example/Foo.class} as package
+     * {@code META-INF.versions.9.com.example}, leaving the actual package unindexed and its imports
+     * reported as unresolved.
+     *
+     * @param entryName name of the archive entry
+     * @return the package name, or {@code null} for entries that declare none
+     */
+    @Nullable private static String packageOf(final String entryName) {
+        if (!entryName.endsWith(CLASS_SUFFIX)) {
+            return null;
+        }
+
+        String name = entryName;
+        if (name.startsWith(MULTI_RELEASE_PREFIX)) {
+            final int versionEnd = name.indexOf('/', MULTI_RELEASE_PREFIX.length());
+            if (versionEnd < 0) {
+                return null;
+            }
+            name = name.substring(versionEnd + 1);
+        }
+
+        if (name.equals(MODULE_INFO)) {
+            return null;
+        }
+
+        final int lastSeparator = name.lastIndexOf('/');
+        return lastSeparator > 0 ? name.substring(0, lastSeparator).replace('/', '.') : null;
     }
 }
