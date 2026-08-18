@@ -145,16 +145,6 @@ public class McDeobCommand implements Callable<Integer> {
             shouldRemap = false;
         }
 
-        if (this.gradleProject && !this.decompile) {
-            log.error("--gradle-project requires --decompile");
-            return 1;
-        }
-
-        if (this.gradleProject && !this.libraries) {
-            log.error("--gradle-project requires --libraries");
-            return 1;
-        }
-
         final ProcessorOptions processorOptions = ProcessorOptions.builder()
                 .remap(shouldRemap)
                 .decompile(this.decompile)
@@ -163,6 +153,12 @@ public class McDeobCommand implements Callable<Integer> {
                 .setupGradleProject(this.gradleProject)
                 .decompilerType(decompilerType)
                 .build();
+
+        final Optional<String> conflict = processorOptions.validate();
+        if (conflict.isPresent()) {
+            log.error("{} Pass --decompile and --libraries alongside --gradle-project.", conflict.get());
+            return 1;
+        }
 
         return Processor.runProcessor(request, processorOptions, null) ? 0 : 1;
     }

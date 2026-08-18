@@ -10,7 +10,14 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Consumer;
 
 public final class JavaLogBridge {
-    private static final int MAX_BACKLOG_CHARS = 20_000_000;
+    /**
+     * Retained so a log window opened after startup still shows what already happened.
+     *
+     * <p>Sized a little above what the window itself keeps, which is all that can be displayed. It
+     * used to hold 20 million characters, or roughly 40 MB, retained for the life of the process and
+     * copied in full every time a listener registered.
+     */
+    private static final int MAX_BACKLOG_CHARS = 200_000;
 
     private static final List<Consumer<String>> LISTENERS = new CopyOnWriteArrayList<>();
     private static final StringBuilder BACKLOG = new StringBuilder();

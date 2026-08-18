@@ -25,6 +25,9 @@ files.
 - Optional zip archive (if enabled)
 - Files organized by version and selected options
 
+Downloads are verified against the SHA-1 published in Mojang's launcher manifest. An intact file is
+reused without re-downloading, and a corrupted transfer is discarded rather than processed.
+
 ## Screenshot
 
 ![McDeob UI](docs/images/ui.png)
@@ -77,6 +80,22 @@ publish as runtime libraries, such as `org.jetbrains:annotations` and `com.googl
 They are detected from the decompiled imports and resolved from Maven Central, pinned to the version
 that was current when the Minecraft version released. Imports that cannot be resolved are logged and
 listed in the generated `README.md`.
+
+### Tests
+
+```bash
+./gradlew test
+```
+
+### Build Options
+
+- `-PgithubRepoName=owner/repo` overrides the repository the update check targets. The build normally
+  reads it from the `origin` git remote; set this when building outside a git checkout.
+
+### Runtime Options
+
+- `-Dmcdeob.reconstruct.threads=N` caps the remapper's worker threads. Defaults to one per available
+  processor.
 
 ### Native Build (GluonFX)
 

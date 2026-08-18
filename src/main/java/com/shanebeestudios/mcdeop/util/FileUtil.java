@@ -1,11 +1,12 @@
 package com.shanebeestudios.mcdeop.util;
 
 import java.io.IOException;
+import java.io.OutputStream;
+import java.nio.file.FileVisitResult;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Comparator;
-import java.util.Iterator;
-import java.util.stream.Stream;
+import java.nio.file.SimpleFileVisitor;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 import lombok.AccessLevel;
@@ -18,35 +19,59 @@ public class FileUtil {
             return;
         }
 
-        try (final Stream<Path> files = Files.walk(path)) {
-            files.sorted(Comparator.reverseOrder()).forEach(FileUtil::deletePath);
-        }
+        Files.walkFileTree(path, new SimpleFileVisitor<>() {
+            @Override
+            public FileVisitResult visitFile(final Path file, final BasicFileAttributes attributes) throws IOException {
+                Files.deleteIfExists(file);
+                return FileVisitResult.CONTINUE;
+            }
+
+            @Override
+            public FileVisitResult postVisitDirectory(final Path directory, final IOException failure)
+                    throws IOException {
+                if (failure != null) {
+                    throw failure;
+                }
+                Files.deleteIfExists(directory);
+                return FileVisitResult.CONTINUE;
+            }
+        });
     }
 
     public static void zip(final Path sourceDirPath, final Path zipFilePath) throws IOException {
-        final Path zipFile = Files.createFile(zipFilePath);
-        try (final ZipOutputStream zs = new ZipOutputStream(Files.newOutputStream(zipFile));
-                final Stream<Path> paths = Files.walk(sourceDirPath)) {
-            for (final Iterator<Path> it = paths.iterator(); it.hasNext(); ) {
-                final Path path = it.next();
-                if (Files.isDirectory(path)) {
-                    continue;
-                }
+        final Path parent = zipFilePath.getParent();
+        if (parent != null) {
+            Files.createDirectories(parent);
+        }
 
-                final ZipEntry zipEntry =
-                        new ZipEntry(sourceDirPath.relativize(path).toString());
-                zs.putNextEntry(zipEntry);
-                Files.copy(path, zs);
-                zs.closeEntry();
-            }
+        try (final OutputStream output = Files.newOutputStream(zipFilePath);
+                final ZipOutputStream zipStream = new ZipOutputStream(output)) {
+            Files.walkFileTree(sourceDirPath, new SimpleFileVisitor<>() {
+                @Override
+                public FileVisitResult visitFile(final Path file, final BasicFileAttributes attributes)
+                        throws IOException {
+                    zipStream.putNextEntry(new ZipEntry(toEntryName(sourceDirPath, file)));
+                    Files.copy(file, zipStream);
+                    zipStream.closeEntry();
+                    return FileVisitResult.CONTINUE;
+                }
+            });
         }
     }
 
-    private static void deletePath(final Path path) {
-        try {
-            Files.deleteIfExists(path);
-        } catch (final IOException exception) {
-            throw new IllegalStateException("Failed to delete " + path.toAbsolutePath(), exception);
-        }
+    /**
+     * Builds the archive entry name for a file.
+     *
+     * <p>The ZIP format mandates {@code /} as the separator regardless of platform, and {@link
+     * ZipOutputStream} does not normalise it. Relying on {@link Path#toString()} alone therefore
+     * produced backslash-separated entries on Windows, which most tools unpack as a flat directory of
+     * literally-named files rather than a tree.
+     *
+     * @param sourceDirPath root the entry is relative to
+     * @param file the file being archived
+     * @return the entry name with {@code /} separators
+     */
+    private static String toEntryName(final Path sourceDirPath, final Path file) {
+        return sourceDirPath.relativize(file).toString().replace('\\', '/');
     }
 }

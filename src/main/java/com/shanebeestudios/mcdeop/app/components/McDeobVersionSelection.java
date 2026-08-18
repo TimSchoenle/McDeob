@@ -5,8 +5,9 @@ import de.timmi6790.launchermeta.data.version.Version;
 import java.time.Month;
 import java.time.format.DateTimeFormatter;
 import java.time.format.FormatStyle;
-import java.util.Comparator;
+import java.util.ArrayList;
 import java.util.EnumMap;
+import java.util.EnumSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
@@ -85,11 +86,12 @@ public class McDeobVersionSelection extends ComboBox<Version> {
     }
 
     private List<DisplayVersionType> getAvailableVersionTypes() {
-        return this.allVersions.stream()
-                .map(McDeobVersionSelection::resolveDisplayType)
-                .distinct()
-                .sorted(Comparator.comparingInt(Enum::ordinal))
-                .toList();
+        // EnumSet iterates in declaration order, which is the display order these are declared in.
+        final EnumSet<DisplayVersionType> present = EnumSet.noneOf(DisplayVersionType.class);
+        for (final Version version : this.allVersions) {
+            present.add(resolveDisplayType(version));
+        }
+        return List.copyOf(present);
     }
 
     private void updateVersionTypeSelection(final DisplayVersionType versionType, final boolean selected) {
@@ -103,9 +105,12 @@ public class McDeobVersionSelection extends ComboBox<Version> {
 
     private void refreshVisibleVersions() {
         final Version currentVersion = this.getValue();
-        final List<Version> filteredVersions = this.allVersions.stream()
-                .filter(version -> this.selectedVersionTypes.contains(resolveDisplayType(version)))
-                .toList();
+        final List<Version> filteredVersions = new ArrayList<>();
+        for (final Version version : this.allVersions) {
+            if (this.selectedVersionTypes.contains(resolveDisplayType(version))) {
+                filteredVersions.add(version);
+            }
+        }
 
         this.getItems().setAll(filteredVersions);
 

@@ -62,11 +62,11 @@ final class GradleProjectWriter {
 
         dependencies {
         {{compileOnlyDependencies}}    implementation(fileTree("../libraries") {
-                include("**/*.jar")
-                exclude("**/*-natives-*.jar")
+                include("{{allJarsGlob}}")
+                exclude("{{nativesGlob}}")
             })
             runtimeOnly(fileTree("../libraries") {
-                include("**/*-natives-*.jar")
+                include("{{nativesGlob}}")
             })
         }
 
@@ -180,7 +180,11 @@ final class GradleProjectWriter {
                 Map.entry("mainClass", mainClass.map(this::escapeKotlinString).orElse("")),
                 Map.entry("mainClassRaw", mainClass.orElse("n/a")),
                 Map.entry("compileOnlyDependencies", this.renderCompileOnlyDependencies(dependencies.coordinates())),
-                Map.entry("unresolvedPackages", this.renderUnresolvedPackages(dependencies.unresolvedPackages())));
+                Map.entry("unresolvedPackages", this.renderUnresolvedPackages(dependencies.unresolvedPackages())),
+                // Sourced from LibraryJars so the generated build script splits natives from
+                // compile-visible jars exactly the way the package index does.
+                Map.entry("allJarsGlob", LibraryJars.ALL_JARS_GLOB),
+                Map.entry("nativesGlob", LibraryJars.NATIVES_GLOB));
 
         final Set<String> sections = new HashSet<>();
         if (mainClass.isPresent()) {

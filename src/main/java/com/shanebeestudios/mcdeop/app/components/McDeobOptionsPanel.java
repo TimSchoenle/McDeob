@@ -19,6 +19,9 @@ public class McDeobOptionsPanel extends FlowPane {
     private final CheckBox librariesCheckBox;
     private final CheckBox gradleProjectCheckBox;
 
+    /** The user's last explicit remap choice, restored when the option becomes available again. */
+    private boolean remapPreference = true;
+
     public McDeobOptionsPanel() {
         super(10, 10);
         this.setAlignment(Pos.CENTER_LEFT);
@@ -98,10 +101,24 @@ public class McDeobOptionsPanel extends FlowPane {
         this.decompilerComboBox.setDisable(!this.decompileCheckBox.isSelected());
     }
 
+    /**
+     * Shows or hides the remap option depending on whether the selected version has mappings.
+     *
+     * <p>The user's own choice is remembered across changes rather than overwritten. Hiding the
+     * option previously re-selected it on every version or target switch, silently undoing a
+     * deliberate opt-out.
+     *
+     * @param visible whether mappings are available for the selected version
+     */
     public void setRemapVisible(final boolean visible) {
+        if (this.remapCheckBox.isVisible()) {
+            this.remapPreference = this.remapCheckBox.isSelected();
+        }
+
         this.remapCheckBox.setVisible(visible);
         this.remapCheckBox.setManaged(visible);
-        this.remapCheckBox.setSelected(visible);
+        // Without mappings there is nothing to remap, so the option cannot stay selected while hidden.
+        this.remapCheckBox.setSelected(visible && this.remapPreference);
     }
 
     public ProcessorOptions getOptions() {

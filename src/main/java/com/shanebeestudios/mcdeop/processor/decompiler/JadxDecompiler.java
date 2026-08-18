@@ -2,10 +2,11 @@ package com.shanebeestudios.mcdeop.processor.decompiler;
 
 import jadx.api.JadxArgs;
 import java.nio.file.Path;
+import java.util.List;
 
 public class JadxDecompiler implements Decompiler {
     @Override
-    public void decompile(final Path jarPath, final Path outputDir) {
+    public void decompile(final Path jarPath, final Path outputDir, final List<Path> libraries) {
         final JadxArgs jadxArgs = new JadxArgs();
         jadxArgs.setInputFile(jarPath.toFile());
         jadxArgs.setOutDir(outputDir.toFile());

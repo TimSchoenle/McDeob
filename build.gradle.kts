@@ -1,4 +1,3 @@
-import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 import org.gradle.api.GradleException
 import java.awt.RenderingHints
 import java.awt.image.BufferedImage
@@ -29,7 +28,7 @@ application {
 }
 
 javafx {
-    version = "21.0.4"
+    version = libs.versions.javafx.get()
     modules = listOf("javafx.controls", "javafx.graphics")
 }
 
@@ -47,6 +46,8 @@ dependencies {
     implementation(libs.picocli)
     implementation(libs.slf4j.simple)
     implementation(libs.okhttp)
+    // Used directly by the release checker; previously reachable only through the launchermeta shadow jar.
+    implementation(libs.jackson.databind)
 
     annotationProcessor(libs.picocli.codegen)
 }
@@ -175,7 +176,9 @@ gluonfx {
 
 allprojects {
     apply {
-        plugin("java")
+        // java-library rather than java, so subprojects can separate their api from their
+        // implementation dependencies.
+        plugin("java-library")
         plugin("com.diffplug.spotless")
         plugin("io.freefair.lombok")
         plugin("com.gradleup.shadow")
@@ -189,6 +192,23 @@ allprojects {
 
     repositories {
         mavenCentral()
+    }
+
+    dependencies {
+        // Annotations are erased at build time, so compileOnly is enough. Declared explicitly because
+        // the code uses @Nullable; it previously resolved only as a transitive of the decompiler
+        // backends, where a dependency bump that dropped it would have broken compilation.
+        "compileOnly"(rootProject.libs.jetbrains.annotations)
+
+        "testImplementation"(rootProject.libs.junit.jupiter)
+        "testRuntimeOnly"(rootProject.libs.junit.platform.launcher)
+    }
+
+    tasks.withType<Test>().configureEach {
+        useJUnitPlatform()
+        testLogging {
+            events("failed")
+        }
     }
 
     spotless {
@@ -223,28 +243,42 @@ allprojects {
         withType<Javadoc> {
             options.encoding = "UTF-8"
         }
-
-        withType<ShadowJar> {
-            // https://github.com/johnrengelman/shadow/issues/857
-            // archiveClassifier.set("")
-
-            // dependsOn("distTar", "distZip")
-        }
     }
 }
 
-fun getGitRepoName(): String {
-    val process =
-        ProcessBuilder("git", "config", "--get", "remote.origin.url")
-            .redirectErrorStream(true)
-            .start()
+/**
+ * Resolved once per build: the lookup shells out to git, and it is read by two build config fields.
+ *
+ * Override with `-PgithubRepoName=owner/repo` (or a `gradle.properties` entry) when building outside
+ * a git checkout, such as from a source tarball, where the lookup cannot succeed.
+ */
+val githubRepoName: String by lazy {
+    val override = providers.gradleProperty("githubRepoName").orNull
+    if (!override.isNullOrBlank()) {
+        return@lazy override
+    }
+
     val url =
-        process.inputStream
-            .bufferedReader()
-            .readText()
-            .trim()
+        runCatching {
+            val process =
+                ProcessBuilder("git", "config", "--get", "remote.origin.url")
+                    .redirectErrorStream(true)
+                    .start()
+            process.inputStream
+                .bufferedReader()
+                .readText()
+                .trim()
+        }.getOrDefault("")
+
     val regex = Regex("""github\.com[/:](.+?)(?:\.git)?$""")
-    return regex.find(url)?.groupValues?.get(1) ?: "unknown/unknown"
+    regex.find(url)?.groupValues?.get(1) ?: run {
+        logger.warn(
+            "Could not determine the GitHub repository from git remote 'origin'. " +
+                "The in-app update check and repository link will be inactive. " +
+                "Set -PgithubRepoName=owner/repo to override.",
+        )
+        "unknown/unknown"
+    }
 }
 
 buildConfig {
@@ -275,11 +309,6 @@ buildConfig {
         "JSPECIFY_VERSION",
         provider { libs.versions.jspecify.get() },
     )
-    buildConfigField(
-        "GITHUB_REPO_NAME",
-        provider {
-            getGitRepoName()
-        },
-    )
-    buildConfigField("GITHUB_REPO_URL", provider { "https://github.com/${getGitRepoName()}" })
+    buildConfigField("GITHUB_REPO_NAME", provider { githubRepoName })
+    buildConfigField("GITHUB_REPO_URL", provider { "https://github.com/$githubRepoName" })
 }

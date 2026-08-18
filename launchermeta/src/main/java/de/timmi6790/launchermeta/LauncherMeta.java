@@ -19,12 +19,16 @@ import java.net.URL;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
+import lombok.extern.slf4j.Slf4j;
 import okhttp3.Call;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 import okhttp3.ResponseBody;
+import org.jetbrains.annotations.Nullable;
 
+@Slf4j
 public class LauncherMeta {
     private static final String VERSION_MANIFEST_URL = "https://launchermeta.mojang.com/mc/game/version_manifest.json";
 
@@ -61,7 +65,10 @@ public class LauncherMeta {
 
         final List<Version> versions = new ArrayList<>();
         for (final JsonNode item : root.path("versions")) {
-            versions.add(this.mapVersion(item));
+            final Version version = this.mapVersion(item);
+            if (version != null) {
+                versions.add(version);
+            }
         }
 
         return new VersionManifest(latestRecord, versions);
@@ -75,17 +82,29 @@ public class LauncherMeta {
         return new ReleaseManifest(downloads, root.path("mainClass").asText(null), libraries, javaVersion, version);
     }
 
-    private Version mapVersion(final JsonNode node) throws MalformedURLException {
+    /**
+     * Maps a single manifest entry.
+     *
+     * @param node the entry to map
+     * @return the version, or {@code null} when its type is not recognised
+     * @throws MalformedURLException if the entry carries an unusable URL
+     */
+    @Nullable private Version mapVersion(final JsonNode node) throws MalformedURLException {
+        final String id = node.path("id").asText();
+        final String rawType = node.path("type").asText();
+
+        final Optional<VersionType> type = VersionType.fromId(rawType);
+        if (type.isEmpty()) {
+            // Skipped rather than fatal: an unrecognised type must not cost us the whole manifest.
+            log.warn("Skipping version {} with unrecognised type '{}'.", id, rawType);
+            return null;
+        }
+
         return new Version(
-                node.path("id").asText(),
-                this.parseVersionType(node.path("type").asText()),
+                id,
+                type.get(),
                 this.toUrl(node.path("url").asText()),
                 OffsetDateTime.parse(node.path("releaseTime").asText()));
-    }
-
-    private VersionType parseVersionType(final String typeName) {
-        final String normalized = typeName.replace('-', '_').toUpperCase();
-        return VersionType.valueOf(normalized);
     }
 
     private Downloads mapDownloads(final JsonNode downloadsNode) throws MalformedURLException {

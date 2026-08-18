@@ -10,20 +10,14 @@ import com.shanebeestudios.mcdeop.app.components.McDeobUpdateNotification;
 import com.shanebeestudios.mcdeop.app.components.McDeobVersionSelection;
 import com.shanebeestudios.mcdeop.processor.Processor;
 import com.shanebeestudios.mcdeop.processor.ResourceRequest;
+import com.shanebeestudios.mcdeop.util.DesktopLauncher;
 import com.shanebeestudios.mcdeop.util.GeneratedConstant;
-import com.shanebeestudios.mcdeop.util.GithubReleaseChecker;
-import com.shanebeestudios.mcdeop.util.Util;
 import de.timmi6790.launchermeta.data.release.ReleaseManifest;
 import de.timmi6790.launchermeta.data.version.Version;
-import java.io.IOException;
 import java.io.InputStream;
+import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.List;
-import java.util.Locale;
-import java.util.Objects;
 import javafx.animation.FadeTransition;
 import javafx.animation.TranslateTransition;
 import javafx.application.Application;
@@ -45,18 +39,22 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
 import javafx.util.Duration;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import org.jetbrains.annotations.Nullable;
 
 @Slf4j
 public class McDeobFxApp extends Application {
-    private static final String GITHUB_RELEASES_URL = GeneratedConstant.GITHUB_REPO_URL + "/releases/latest";
-    private static final DateTimeFormatter CHECKED_AT_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
-    @Setter
+    /**
+     * Handed over from {@code main} before the toolkit starts.
+     *
+     * <p>Static because {@link Application#launch} constructs the application reflectively through a
+     * no-argument constructor, leaving no place to pass a dependency in. Assigned once, before launch,
+     * and only read afterwards.
+     */
     private static VersionManager versionManager;
 
-    private final GithubReleaseChecker releaseChecker = new GithubReleaseChecker();
+    @Nullable private Task<Void> runningTask;
 
     private McDeobTypeSelection typeSelection;
     private McDeobVersionSelection versionSelection;
@@ -64,12 +62,10 @@ public class McDeobFxApp extends Application {
     private McDeobStatusBox statusBox;
     private McDeobUpdateNotification updateNotification;
     private McDeobLogWindow logWindow;
+    private UpdateCheckController updateCheckController;
     private Button startButton;
     private Button openDirectoryButton;
-    private Button checkUpdatesButton;
     private Path lastOutputDirectory;
-    private String latestReleaseUrl = GITHUB_RELEASES_URL;
-    private boolean updateCheckInProgress;
 
     @Override
     public void start(final Stage stage) {
@@ -88,14 +84,15 @@ public class McDeobFxApp extends Application {
         root.setFillWidth(true);
         root.getStyleClass().add("app-shell");
 
+        // Built before the header, which wires its refresh button to the notification banner.
+        this.updateNotification = new McDeobUpdateNotification();
+
         final McDeobTitle title = new McDeobTitle();
         final HBox iconActions = this.createIconActions();
         final HBox headerRow = new HBox(12, title, iconActions);
         headerRow.setAlignment(Pos.TOP_LEFT);
         headerRow.getStyleClass().add("header-row");
         HBox.setHgrow(title, Priority.ALWAYS);
-
-        this.updateNotification = new McDeobUpdateNotification();
 
         this.typeSelection = new McDeobTypeSelection();
         this.typeSelection.addSelectionListener(() -> {
@@ -178,23 +175,36 @@ public class McDeobFxApp extends Application {
         root.prefWidthProperty().bind(appScroll.widthProperty().subtract(20));
 
         final Scene scene = new Scene(appScroll, 900, 680);
-        try {
-            scene.getStylesheets()
-                    .add(Objects.requireNonNull(this.getClass().getResource("/styles.css"))
-                            .toExternalForm());
-        } catch (final Exception e) {
-            log.warn("Could not load styles.css", e);
+        final URL stylesheet = this.getClass().getResource("/styles.css");
+        if (stylesheet != null) {
+            scene.getStylesheets().add(stylesheet.toExternalForm());
+        } else {
+            log.warn("Could not load styles.css; the interface will fall back to default styling.");
         }
 
         stage.setScene(scene);
         this.configureStageSize(stage, scene, root, headerRow, controlsCard, statusRow, startRow, logCard);
         stage.show();
         this.animateEntrance(headerRow, controlsCard, statusRow, startRow, logCard);
-        this.checkForUpdatesAsync(false);
+        this.updateCheckController.check(false);
+    }
+
+    /**
+     * Installs the version manager for the application instance the toolkit is about to create.
+     *
+     * @param versionManager the manager to use, must be set before {@link Application#launch}
+     */
+    public static void setVersionManager(final VersionManager versionManager) {
+        McDeobFxApp.versionManager = versionManager;
     }
 
     @Override
     public void stop() {
+        // The processing thread is a daemon, so it cannot keep the JVM alive on its own; cancelling
+        // gives the task a chance to stop rather than being killed mid-write on shutdown.
+        if (this.runningTask != null) {
+            this.runningTask.cancel(true);
+        }
         if (this.logWindow != null) {
             this.logWindow.dispose();
         }
@@ -227,15 +237,24 @@ public class McDeobFxApp extends Application {
         return row;
     }
 
+    /**
+     * Builds the header icon buttons and the update check they drive.
+     *
+     * @return the icon button row
+     */
     private HBox createIconActions() {
         final Button githubButton = this.createIconButton("\u2197");
         githubButton.setOnAction(e -> this.getHostServices().showDocument(GeneratedConstant.GITHUB_REPO_URL));
 
-        this.checkUpdatesButton = this.createIconButton("\u21BB");
-        this.checkUpdatesButton.getStyleClass().add("update-icon-button");
-        this.checkUpdatesButton.setOnAction(e -> this.checkForUpdatesAsync(true));
+        final Button checkUpdatesButton = this.createIconButton("\u21BB");
+        checkUpdatesButton.getStyleClass().add("update-icon-button");
 
-        final HBox iconActions = new HBox(8, githubButton, this.checkUpdatesButton);
+        this.updateCheckController =
+                new UpdateCheckController(this.updateNotification, checkUpdatesButton, url -> this.getHostServices()
+                        .showDocument(url));
+        checkUpdatesButton.setOnAction(e -> this.updateCheckController.check(true));
+
+        final HBox iconActions = new HBox(8, githubButton, checkUpdatesButton);
         iconActions.setAlignment(Pos.CENTER_RIGHT);
         iconActions.getStyleClass().add("icon-actions");
         return iconActions;
@@ -249,96 +268,6 @@ public class McDeobFxApp extends Application {
         button.setPrefSize(34, 34);
         button.setMaxSize(34, 34);
         return button;
-    }
-
-    private void checkForUpdatesAsync(final boolean userInitiated) {
-        if (this.updateCheckInProgress) {
-            return;
-        }
-        this.updateCheckInProgress = true;
-        this.checkUpdatesButton.setDisable(true);
-        this.updateNotification.showChecking();
-
-        final Task<GithubReleaseChecker.UpdateCheckResult> task = new Task<>() {
-            @Override
-            protected GithubReleaseChecker.UpdateCheckResult call() {
-                try {
-                    return McDeobFxApp.this.releaseChecker.checkForUpdateDetailed(GeneratedConstant.VERSION);
-                } catch (final Exception e) {
-                    log.error("Could not check for newer GitHub releases", e);
-                    return new GithubReleaseChecker.UpdateCheckResult(
-                            GithubReleaseChecker.UpdateCheckStatus.FAILED,
-                            null,
-                            e.getMessage() != null
-                                    ? e.getMessage()
-                                    : e.getClass().getSimpleName());
-                }
-            }
-        };
-
-        task.setOnSucceeded(event -> {
-            this.updateCheckInProgress = false;
-            this.checkUpdatesButton.setDisable(false);
-            final GithubReleaseChecker.UpdateCheckResult result = task.getValue();
-            if (result == null) {
-                this.updateNotification.showCheckFailed(
-                        "No response received from update checker.",
-                        () -> this.checkForUpdatesAsync(true),
-                        this.updateNotification::dismiss);
-                return;
-            }
-
-            if (result.status() == GithubReleaseChecker.UpdateCheckStatus.UPDATE_AVAILABLE
-                    && result.updateInfo() != null) {
-                final String url = result.updateInfo().releaseUrl();
-                if (url != null && !url.isBlank()) {
-                    this.latestReleaseUrl = url;
-                }
-                this.updateNotification.showUpdateAvailable(
-                        GeneratedConstant.VERSION,
-                        result.updateInfo(),
-                        this::openLatestRelease,
-                        this.updateNotification::dismiss);
-                return;
-            }
-
-            if (result.status() == GithubReleaseChecker.UpdateCheckStatus.UP_TO_DATE) {
-                if (userInitiated) {
-                    final String checkedAt = "Last checked: " + CHECKED_AT_FORMAT.format(LocalDateTime.now());
-                    this.updateNotification.showUpToDate(
-                            GeneratedConstant.VERSION, checkedAt, () -> this.checkForUpdatesAsync(true));
-                } else {
-                    this.updateNotification.dismiss();
-                }
-                return;
-            }
-
-            final String reason =
-                    result.errorMessage() != null && !result.errorMessage().isBlank()
-                            ? result.errorMessage()
-                            : "Unknown error while contacting GitHub.";
-            this.updateNotification.showCheckFailed(
-                    reason, () -> this.checkForUpdatesAsync(true), this.updateNotification::dismiss);
-        });
-
-        task.setOnFailed(event -> {
-            this.updateCheckInProgress = false;
-            this.checkUpdatesButton.setDisable(false);
-            final Throwable throwable = task.getException();
-            final String reason = throwable != null && throwable.getMessage() != null
-                    ? throwable.getMessage()
-                    : "Unexpected failure while checking updates.";
-            this.updateNotification.showCheckFailed(
-                    reason, () -> this.checkForUpdatesAsync(true), this.updateNotification::dismiss);
-        });
-
-        final Thread thread = new Thread(task, "Release-Check-Thread");
-        thread.setDaemon(true);
-        thread.start();
-    }
-
-    private void openLatestRelease() {
-        this.getHostServices().showDocument(this.latestReleaseUrl);
     }
 
     private void animateEntrance(final Node... nodes) {
@@ -434,24 +363,35 @@ public class McDeobFxApp extends Application {
             }
         };
 
+        // messageProperty already delivers changes on the FX thread, so no further dispatch is needed.
         task.messageProperty().addListener((obs, old, newMsg) -> {
             if (newMsg != null && !newMsg.isBlank()) {
-                Platform.runLater(() -> this.statusBox.updateRunningMessage(newMsg));
+                this.statusBox.updateRunningMessage(newMsg);
             }
         });
 
         task.setOnSucceeded(e -> {
+            this.runningTask = null;
             this.statusBox.updateStatus("Completed successfully!", false);
             this.openDirectoryButton.setDisable(false);
             this.resetControls();
         });
 
         task.setOnFailed(e -> {
+            this.runningTask = null;
             this.statusBox.updateStatus("Process failed. Review logs for details.", true);
             this.resetControls();
         });
 
-        new Thread(task, "Processor-Thread").start();
+        task.setOnCancelled(e -> {
+            this.runningTask = null;
+            this.resetControls();
+        });
+
+        this.runningTask = task;
+        final Thread thread = new Thread(task, "Processor-Thread");
+        thread.setDaemon(true);
+        thread.start();
     }
 
     private void setControlsEnabled(final boolean enabled) {
@@ -469,9 +409,7 @@ public class McDeobFxApp extends Application {
     }
 
     private Path resolveOutputDirectory(final Version version) {
-        final String versionFolder = String.format(
-                "%s-%s", this.typeSelection.getSelectedType().name().toLowerCase(Locale.ENGLISH), version.id());
-        return Util.getBaseDataFolder().resolve(versionFolder).toAbsolutePath();
+        return Processor.resolveOutputDirectory(this.typeSelection.getSelectedType(), version);
     }
 
     private void openOutputDirectory() {
@@ -489,27 +427,14 @@ public class McDeobFxApp extends Application {
     }
 
     private boolean tryOpenDirectory(final Path directory) {
-        final String osName = System.getProperty("os.name", "").toLowerCase(Locale.ENGLISH);
-        final List<String> command;
-        if (osName.contains("win")) {
-            command = List.of("explorer.exe", directory.toString());
-        } else if (osName.contains("mac")) {
-            command = List.of("open", directory.toString());
-        } else {
-            command = List.of("xdg-open", directory.toString());
-        }
-
-        try {
-            new ProcessBuilder(command).start();
+        if (DesktopLauncher.openDirectory(directory)) {
             return true;
-        } catch (final IOException exception) {
-            log.warn("Failed to open output directory using command {}", command, exception);
         }
 
         try {
             this.getHostServices().showDocument(directory.toUri().toString());
             return true;
-        } catch (final Exception exception) {
+        } catch (final RuntimeException exception) {
             log.error("Failed to open output directory {}", directory, exception);
             return false;
         }
