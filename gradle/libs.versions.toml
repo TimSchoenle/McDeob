@@ -18,7 +18,7 @@ jspecify = "1.0.1"
 
 # plugins
 lombok = "9.5.0"
-spotless = "8.9.0"
+spotless = "8.10.0"
 shadow = "9.6.1"
 buildconfig = "6.0.10"
 javafxplugin = "0.1.0"
