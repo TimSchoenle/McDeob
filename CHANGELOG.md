@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.12.12](https://github.com/TimSchoenle/McDeob/compare/v2.12.11...v2.12.12) (2026-08-22)
+
+
+### Bug Fixes
+
+* **deps:** update dependency com.fasterxml.jackson.core:jackson-databind to v2.22.2 ([#322](https://github.com/TimSchoenle/McDeob/issues/322)) ([cecbff2](https://github.com/TimSchoenle/McDeob/commit/cecbff26042a26f0ae6fdf2843e319cc8b55382e))
+* **deps:** update dependency com.squareup.okhttp3:okhttp to v5.5.0 ([#323](https://github.com/TimSchoenle/McDeob/issues/323)) ([7e20fb0](https://github.com/TimSchoenle/McDeob/commit/7e20fb0d912e9e961745048137e7b79cd2147f40))
+
 ## [2.12.11](https://github.com/TimSchoenle/McDeob/compare/v2.12.10...v2.12.11) (2026-08-18)
 
 
