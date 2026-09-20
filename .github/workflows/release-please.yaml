@@ -60,7 +60,7 @@ jobs:
                     persist-credentials: false
 
             -   name: Setup Base Environment
-                uses: ./.github/actions/setup-base-environment
+                uses: $/.github/actions/setup-base-environment
 
             -   name: Build with Gradle
                 shell: bash
@@ -100,10 +100,10 @@ jobs:
 
             -   name: Build Native Executable
                 id: native_build
-                uses: ./.github/actions/build-native-with-graalvm
+                uses: $/.github/actions/build-native-with-graalvm
 
             -   name: Sign Native Artifact
-                uses: ./.github/actions/sign-native-artifact
+                uses: $/.github/actions/sign-native-artifact
                 with:
                     native_asset: ${{ steps.native_build.outputs.native_asset }}
                 env:
