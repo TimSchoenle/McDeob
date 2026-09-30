@@ -17,7 +17,7 @@ jsr305 = "3.0.2"
 jspecify = "1.0.1"
 
 # plugins
-lombok = "9.5.0"
+lombok = "9.7.0"
 spotless = "8.10.1"
 shadow = "9.6.1"
 buildconfig = "6.0.10"
