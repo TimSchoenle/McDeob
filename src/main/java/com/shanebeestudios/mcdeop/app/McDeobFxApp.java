@@ -249,9 +249,10 @@ public class McDeobFxApp extends Application {
         final Button checkUpdatesButton = this.createIconButton("\u21BB");
         checkUpdatesButton.getStyleClass().add("update-icon-button");
 
-        this.updateCheckController =
-                new UpdateCheckController(this.updateNotification, checkUpdatesButton, url -> this.getHostServices()
-                        .showDocument(url));
+        this.updateCheckController = new UpdateCheckController(
+                this.updateNotification,
+                checkUpdatesButton,
+                url -> this.getHostServices().showDocument(url));
         checkUpdatesButton.setOnAction(e -> this.updateCheckController.check(true));
 
         final HBox iconActions = new HBox(8, githubButton, checkUpdatesButton);
