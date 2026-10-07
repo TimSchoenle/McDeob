@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.12.13](https://github.com/TimSchoenle/McDeob/compare/v2.12.12...v2.12.13) (2026-10-07)
+
+
+### Bug Fixes
+
+* **deps:** update junit-framework monorepo to v6 ([#321](https://github.com/TimSchoenle/McDeob/issues/321)) ([699bfbb](https://github.com/TimSchoenle/McDeob/commit/699bfbbc1a5ff53f19e17fd05e65dee389346300))
+* **deps:** update slf4j monorepo to v2.0.20 ([#348](https://github.com/TimSchoenle/McDeob/issues/348)) ([b146ab0](https://github.com/TimSchoenle/McDeob/commit/b146ab0cedab7a5028f8dd1a7d78c9da4147e316))
+
 ## [2.12.12](https://github.com/TimSchoenle/McDeob/compare/v2.12.11...v2.12.12) (2026-08-22)
 
 
