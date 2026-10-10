@@ -6,6 +6,30 @@ import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import javax.imageio.ImageIO
 
+buildscript {
+    // The gluonfx plugin (through com.gluonhq:substrate 0.0.69, the latest release) depends on
+    // bcprov-jdk15on and bcpkix-jdk15on 1.49. The jdk15on line is end-of-life and carries known
+    // vulnerabilities; substitute the maintained jdk18on artifacts until substrate moves off them.
+    val bcprov =
+        libs.bouncycastle.bcprov
+            .get()
+            .toString()
+    val bcpkix =
+        libs.bouncycastle.bcpkix
+            .get()
+            .toString()
+    configurations.classpath {
+        resolutionStrategy.dependencySubstitution {
+            substitute(module("org.bouncycastle:bcprov-jdk15on"))
+                .using(module(bcprov))
+                .because("bcprov-jdk15on is end-of-life and vulnerable")
+            substitute(module("org.bouncycastle:bcpkix-jdk15on"))
+                .using(module(bcpkix))
+                .because("bcpkix-jdk15on is end-of-life and vulnerable")
+        }
+    }
+}
+
 plugins {
     `java-library`
     application

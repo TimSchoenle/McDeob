@@ -25,6 +25,9 @@ javafxplugin = "0.1.0"
 gluonfx = "1.0.29"
 foojay-resolver = "1.0.0"
 
+# build classpath only: replaces the end-of-life bcprov/bcpkix-jdk15on 1.49 pulled in by gluonfx (via substrate)
+bouncycastle = "1.86"
+
 [libraries]
 jackson-databind = { module = "com.fasterxml.jackson.core:jackson-databind", version.ref = "jacksonDatabind" }
 okhttp = { module = "com.squareup.okhttp3:okhttp", version.ref = "okhttp" }
@@ -45,6 +48,10 @@ junit-platform-launcher = { module = "org.junit.platform:junit-platform-launcher
 # coordinates and keeps the newest-known version in [versions] current.
 jsr305 = { module = "com.google.code.findbugs:jsr305", version.ref = "jsr305" }
 jspecify = { module = "org.jspecify:jspecify", version.ref = "jspecify" }
+
+# Build classpath substitutions, see the buildscript block in build.gradle.kts.
+bouncycastle-bcprov = { module = "org.bouncycastle:bcprov-jdk18on", version.ref = "bouncycastle" }
+bouncycastle-bcpkix = { module = "org.bouncycastle:bcpkix-jdk18on", version.ref = "bouncycastle" }
 
 [plugins]
 lombok = { id = "io.freefair.lombok", version.ref = "lombok" }

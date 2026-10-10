@@ -34,6 +34,10 @@ jobs:
                 with:
                     app-id: ${{ secrets.RELEASE_BOT_APP_ID }}
                     private-key: ${{ secrets.RELEASE_BOT_PRIVATE_KEY }}
+                    # Scope the token to what release-please needs, mirroring the job permissions.
+                    permission-contents: write # to create release tags/commits
+                    permission-issues: write # to manage release labels
+                    permission-pull-requests: write # to create release PRs
 
             -   name: Run release-please
                 id: release
