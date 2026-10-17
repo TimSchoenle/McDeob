@@ -1,5 +1,19 @@
 # Changelog
 
+## [2.12.14](https://github.com/TimSchoenle/McDeob/compare/v2.12.13...v2.12.14) (2026-10-17)
+
+
+### Bug Fixes
+
+* **security:** resolve open zizmor and Dependabot alerts ([#363](https://github.com/TimSchoenle/McDeob/issues/363)) ([fbf6999](https://github.com/TimSchoenle/McDeob/commit/fbf699996ad0ea19403856c242676737e6f4dab0))
+
+
+### Dependencies
+
+* **deps:** update dependency com.diffplug.spotless to v8.10.4 ([#375](https://github.com/TimSchoenle/McDeob/issues/375)) ([92a8068](https://github.com/TimSchoenle/McDeob/commit/92a8068d0fe788f98733370b8d36e818c0c82abb))
+* **deps:** update dependency io.freefair.lombok to v9.8.1 ([#383](https://github.com/TimSchoenle/McDeob/issues/383)) ([efcaf34](https://github.com/TimSchoenle/McDeob/commit/efcaf3481cc9b1390dd393eac2ecc8aa009911c6))
+* **deps:** update dependency io.freefair.lombok to v9.8.2 ([#385](https://github.com/TimSchoenle/McDeob/issues/385)) ([305c069](https://github.com/TimSchoenle/McDeob/commit/305c06909dc5a073a3db3e03a1b730820ba6534e))
+
 ## [2.12.13](https://github.com/TimSchoenle/McDeob/compare/v2.12.12...v2.12.13) (2026-10-07)
 
 
