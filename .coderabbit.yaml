@@ -1,0 +1,91 @@
+---
+tone_instructions: "Direct, no filler, no praise."
+reviews:
+  profile: "assertive"
+  auto_review:
+    ignore_usernames:
+    - "renovate[bot]"
+    - "renovate"
+    - "automatic-release-manager[bot]"
+    - "automatic-release-manager"
+  path_filters:
+  - "!gradle/wrapper/gradle-wrapper.jar"
+  - "!gradlew"
+  - "!gradlew.bat"
+  - "!**/build/**"
+  - "!CHANGELOG.md"
+  - "!.release-please-manifest.json"
+  path_instructions:
+  - path: "**/src/main/java/**/*.java"
+    instructions: "Java 21 desktop application (JavaFX UI and picocli CLI) that downloads\
+      \ Minecraft artifacts from\nMojang's launcher metadata, remaps them and decompiles\
+      \ them, also shipped as a GraalVM native image.\nFlag:\n- Downloads: every fetched\
+      \ file must be verified against the manifest SHA-1 and size before use;\n  HTTP\
+      \ responses and bodies closed; timeouts set; partial files removed on failure.\n\
+      - Filesystem: paths derived from manifest data or jar entries must not escape\
+      \ the output\n  directory; temp files and directories cleaned up; streams, jars\
+      \ and zip files in\n  try-with-resources.\n- Concurrency: long-running work\
+      \ off the JavaFX application thread, UI updates only via\n  `Platform.runLater`;\
+      \ shared state across worker threads synchronised; `InterruptedException`\n\
+      \  restores the interrupt flag; executors shut down.\n- External processes (`ProcessBuilder`):\
+      \ argument lists only, no shell strings built from input.\n- Reflection, resources\
+      \ or dynamic class loading added without a matching entry in\n  `src/main/resources/META-INF/native-image/**`,\
+      \ which breaks the native build.\n- Null-safety (`@Nullable` from JetBrains\
+      \ annotations), exceptions that lose the cause, and errors\n  logged and swallowed\
+      \ where the caller needs to fail.\nPrefer plain loops over the Stream API. Lombok\
+      \ is applied to every module: suggest it instead of\nhand-written constructors,\
+      \ getters, builders or loggers.\n"
+  - path: "{common,launchermeta}/src/main/java/**/*.java"
+    instructions: "Library modules consumed by the app through shadow jars. `RequestModule.createHttpClient()`\
+      \ and the\n`LauncherMeta` constructor expose OkHttp on the public API; flag\
+      \ API changes that ripple into the\napp, and Jackson model changes that no longer\
+      \ tolerate unknown or missing manifest fields.\n"
+  - path: "src/main/java/com/shanebeestudios/mcdeop/app/**"
+    instructions: "JavaFX UI. Check thread confinement, listener and binding leaks,\
+      \ disabled states while a job runs,\nand that errors reach the user instead\
+      \ of only the log.\n"
+  - path: "src/main/resources/META-INF/native-image/**"
+    instructions: "Hand-maintained GraalVM reachability metadata. Check that every\
+      \ entry still matches a class or\nresource that exists, and that new reflective\
+      \ access in the diff is covered.\n"
+  - path: "**/src/test/java/**/*.java"
+    instructions: "JUnit Jupiter tests. Require assertions on behaviour, not just\
+      \ absence of exceptions; flag tests\nthat cannot fail, real network access,\
+      \ and filesystem state not confined to `@TempDir`.\n"
+  - path: "**/*.gradle.kts"
+    instructions: "Build logic. Flag eager task configuration, configuration-cache\
+      \ incompatible constructs,\nundeclared task inputs/outputs, and changes to the\
+      \ native-image, shadow or dependency\nsubstitution setup.\n"
+  - path: ".github/{workflows,actions}/**"
+    instructions: "Every third-party action must be pinned to a full commit SHA with\
+      \ a version comment.\nRequire least-privilege `permissions:` at workflow or\
+      \ job level, `persist-credentials: false`\non checkout unless pushing, no untrusted\
+      \ `${{ github.event.* }}` interpolation into `run:`,\nand no `pull_request_target`\
+      \ that checks out or executes PR code. Signing secrets must be\nscoped to the\
+      \ steps that sign.\n"
+  - path: "hooks/**"
+    instructions: "Bash git hooks. Require `set -euo pipefail` where compatible with\
+      \ the hook contract, quoted\nexpansions, and that the allowed commit types match\
+      \ release-please-config.json.\n"
+  pre_merge_checks:
+    title:
+      mode: "error"
+      requirements: "Must follow Conventional Commits: `type(scope)?!?: subject`.\
+        \ Allowed types: feat, fix, perf,\nrevert, docs, refactor, test, style, ci,\
+        \ build, chore, deps. Lowercase, imperative subject,\nno trailing period.\
+        \ release-please derives version bumps and the changelog from this title.\n"
+  tools:
+    pmd:
+      enabled: true
+    stylelint:
+      enabled: false
+    actionlint:
+      enabled: true
+    zizmor:
+      enabled: true
+    gitleaks:
+      enabled: true
+    shellcheck:
+      enabled: true
+    markdownlint:
+      enabled: true
