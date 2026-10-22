@@ -1,5 +1,17 @@
 # Changelog
 
+## [2.12.15](https://github.com/TimSchoenle/McDeob/compare/v2.12.14...v2.12.15) (2026-10-22)
+
+
+### Build System
+
+* mark gradlew executable ([#391](https://github.com/TimSchoenle/McDeob/issues/391)) ([072f44e](https://github.com/TimSchoenle/McDeob/commit/072f44e75aa844bb11c9b7b756300819156cb028))
+
+
+### Dependencies
+
+* **deps:** update dependency com.fasterxml.jackson.core:jackson-databind to v2.22.4 ([#387](https://github.com/TimSchoenle/McDeob/issues/387)) ([8681df4](https://github.com/TimSchoenle/McDeob/commit/8681df4d309fd23992b3586d705adff71587fc1c))
+
 ## [2.12.14](https://github.com/TimSchoenle/McDeob/compare/v2.12.13...v2.12.14) (2026-10-17)
 
 
