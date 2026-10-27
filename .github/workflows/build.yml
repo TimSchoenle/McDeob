@@ -56,9 +56,8 @@ jobs:
                 os: [ ubuntu-latest, windows-latest, macos-latest ]
         runs-on: ${{ matrix.os }}
         permissions:
-            contents: write # to write junit reports
-            checks: write # to write junit reports
-            id-token: write # to write junit reports
+            contents: read # to fetch code
+            checks: write # for action-junit-report to publish the test report as a check run
         steps:
             -   name: Harden Runner
                 uses: step-security/harden-runner@dc2769abcc0fcfbadfc1df54081c1608579ef6b2 # v2.22.2
@@ -105,9 +104,18 @@ jobs:
                     java_version: '25'
                     flags: java
 
+    # Builds the native executable on every event, and signs it only on a push to master.
+    #
+    # On a pull request this job runs that pull request's code: `nativeBuild` runs its Gradle
+    # wrapper, build scripts and plugins, and `$/` resolves the local actions from its commit. Code
+    # running in a job can read every secret the job holds, so the signing key must never reach a
+    # pull request run: the sign step is skipped there, the key is referenced only in that step's
+    # `env`, and the `native-test` environment is entered only on a push (an empty name is no
+    # environment). A pull request still proves the native build works; its artifact is just
+    # unsigned.
     native:
         name: Native(${{ matrix.os }})
-        environment: native-test
+        environment: ${{ github.event_name == 'push' && 'native-test' || '' }}
         needs: [ test ]
         strategy:
             fail-fast: false
@@ -132,6 +140,7 @@ jobs:
                 uses: $/.github/actions/build-native-with-graalvm
 
             -   name: Sign Native Artifact
+                if: github.event_name == 'push'
                 uses: $/.github/actions/sign-native-artifact
                 with:
                     native_asset: ${{ steps.native_build.outputs.native_asset }}
@@ -139,6 +148,9 @@ jobs:
                     COSGIN_PRIVATE_KEY: ${{ secrets.COSGIN_PRIVATE_KEY }}
                     COSGIN_PASSWORD: ${{ secrets.COSGIN_PASSWORD }}
 
+            # The `.sigstore.json` bundle exists only where the sign step ran. On a pull request
+            # that path matches nothing and only the executable is uploaded; `if-no-files-found`
+            # still fails the step when the executable itself is missing.
             -   name: Upload Native Artifact
                 uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
                 if: success()

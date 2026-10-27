@@ -53,6 +53,11 @@ jobs:
         needs: auto-format
         # A fork's pull request gets no secrets, and its branch is not in this repository.
         if: needs.auto-format.outputs.changes_detected == 'true' && github.event.pull_request.head.repo.full_name == github.repository
+        # Where ACTIONS_MAINTENANCE_APP_ID and ACTIONS_MAINTENANCE_PRIVATE_KEY belong, as in the
+        # sibling repositories. Only this job, which runs no repository code, enters it.
+        environment:
+            name: ci
+            deployment: false
         runs-on: ubuntu-latest
         permissions:
             contents: read # to fetch the commit the patch applies to
@@ -82,15 +87,30 @@ jobs:
 
             # The artifact name is a literal on purpose: the auto-format job's outputs come from pull
             # request code. allowed_paths is what the spotless block in build.gradle.kts formats, in
-            # every project (root, common, launchermeta): java sources, *.gradle.kts (kotlinGradle)
-            # and the *.yaml files at each project's root (yaml).
+            # every project (root, common, launchermeta), spelled out per project rather than as
+            # `**` globs so that no other directory - a new `buildSrc/`, an included build - can
+            # be committed through it:
+            #
+            # - java: the sources under each project's `src/`;
+            # - kotlinGradle: its default target, the `*.gradle.kts` at each project's root, which
+            #   here is these four files by name;
+            # - yaml: `target("*.yaml")`, the *.yaml files at each project's root.
+            #
+            # The four build scripts are the one place this still commits formatter output to
+            # build logic, and that output comes from a run of the pull request's own Gradle
+            # plugins; anything this produces lands under the App's name. A Spotless change outside
+            # this list fails this job and nothing is committed, so a new project means adding its
+            # paths here.
             -   name: Commit Patch
                 id: commit
                 uses: TimSchoenle/actions/actions/common/commit-patch@bbc2c5e2a0f9345cb2e84946846736f047a6eae3 # tag=actions-common-commit-patch-v1.1.0
                 with:
                     token: ${{ steps.generate_token.outputs.token }}
                     artifact_name: auto-spotless
-                    allowed_paths: '**/*.java **/*.gradle.kts *.yaml common/*.yaml launchermeta/*.yaml'
+                    allowed_paths: >-
+                        src/**/*.java common/src/**/*.java launchermeta/src/**/*.java
+                        build.gradle.kts settings.gradle.kts common/build.gradle.kts launchermeta/build.gradle.kts
+                        *.yaml common/*.yaml launchermeta/*.yaml
                     commit_message: 'style: apply spotless formatting'
 
             # The comment auto-spotless v1 posted itself.
