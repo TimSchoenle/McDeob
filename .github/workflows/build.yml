@@ -19,6 +19,7 @@ jobs:
             matrix:
                 os: [ ubuntu-latest, windows-latest, macos-latest ]
         runs-on: ${{ matrix.os }}
+        timeout-minutes: 10
         permissions:
             contents: read # to read code
         steps:
@@ -47,6 +48,7 @@ jobs:
                     # A file, directory or wildcard pattern that describes what to upload
                     path: |
                         build/libs/McDeob-*-all.jar
+                    if-no-files-found: error
 
     test:
         name: Test
@@ -55,6 +57,7 @@ jobs:
             matrix:
                 os: [ ubuntu-latest, windows-latest, macos-latest ]
         runs-on: ${{ matrix.os }}
+        timeout-minutes: 20
         permissions:
             contents: read # to fetch code
             checks: write # for action-junit-report to publish the test report as a check run
@@ -80,6 +83,7 @@ jobs:
                 if: success() || failure()
                 with:
                     report_paths: '**/build/test-results/test/TEST-*.xml'
+                    require_tests: true
 
     # Kept apart from `test`, so a Codecov outage fails this job alone. The upload authenticates
     # with this job's OIDC token, so the job needs no environment and no secret.
@@ -122,6 +126,7 @@ jobs:
             matrix:
                 os: [ ubuntu-latest, windows-latest, macos-latest ]
         runs-on: ${{ matrix.os }}
+        timeout-minutes: 45
         permissions:
             contents: read # to read code
         steps:

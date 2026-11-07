@@ -14,7 +14,12 @@ permissions: { }
 jobs:
     release-please:
         name: Release Please
+        # The release bot's secrets belong in the ci environment.
+        environment:
+            name: ci
+            deployment: false
         runs-on: ubuntu-latest
+        timeout-minutes: 15
         outputs:
             release_created: ${{ steps.release.outputs.release_created }}
             tag_name: ${{ steps.release.outputs.tag_name }}
@@ -32,7 +37,7 @@ jobs:
                 id: generate_token
                 uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
                 with:
-                    app-id: ${{ secrets.RELEASE_BOT_APP_ID }}
+                    client-id: ${{ secrets.RELEASE_BOT_APP_ID }}
                     private-key: ${{ secrets.RELEASE_BOT_PRIVATE_KEY }}
                     # Scope the token to what release-please needs, mirroring the job permissions.
                     permission-contents: write # to create release tags/commits
@@ -49,6 +54,7 @@ jobs:
         name: Release Jar Artifact
         needs: release-please
         runs-on: ubuntu-latest
+        timeout-minutes: 15
         if: ${{ needs.release-please.outputs.release_created }}
         permissions:
             contents: write # to release artifacts
@@ -77,13 +83,14 @@ jobs:
                     RELEASE_TAG: ${{ needs.release-please.outputs.tag_name }}
                 run: |
                     JAR_PATH=$(ls build/libs/McDeob-*-all.jar)
-                    gh release upload $RELEASE_TAG "$JAR_PATH#McDeob.jar" --clobber
+                    gh release upload "$RELEASE_TAG" "$JAR_PATH#McDeob.jar" --clobber
 
     native-artifacts:
         name: Release Native(${{ matrix.os }})
         environment: release
         needs: release-please
         runs-on: ${{ matrix.os }}
+        timeout-minutes: 45
         if: ${{ needs.release-please.outputs.release_created }}
         strategy:
             fail-fast: false
