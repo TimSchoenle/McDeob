@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.12.16](https://github.com/TimSchoenle/McDeob/compare/v2.12.15...v2.12.16) (2026-11-07)
+
+
+### Dependencies
+
+* **deps:** update dependency io.freefair.lombok to v9.8.3 ([#402](https://github.com/TimSchoenle/McDeob/issues/402)) ([caa195d](https://github.com/TimSchoenle/McDeob/commit/caa195d4d75a625ad1f6ac4cfc7f47d4d3aa95f1))
+
 ## [2.12.15](https://github.com/TimSchoenle/McDeob/compare/v2.12.14...v2.12.15) (2026-10-28)
 
 
