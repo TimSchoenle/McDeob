@@ -19,7 +19,7 @@ jobs:
             name: ci
             deployment: false
         runs-on: ubuntu-latest
-        timeout-minutes: 5
+        timeout-minutes: 15
         outputs:
             release_created: ${{ steps.release.outputs.release_created }}
             tag_name: ${{ steps.release.outputs.tag_name }}
@@ -54,7 +54,7 @@ jobs:
         name: Release Jar Artifact
         needs: release-please
         runs-on: ubuntu-latest
-        timeout-minutes: 10
+        timeout-minutes: 15
         if: ${{ needs.release-please.outputs.release_created }}
         permissions:
             contents: write # to release artifacts
