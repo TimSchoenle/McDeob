@@ -11,11 +11,9 @@ import picocli.CommandLine;
 @Slf4j
 public class McDeob {
     public static void main(final String[] args) {
-        if (args.length == 0) 
-        {
+        if (args.length == 0) {
             JavaLogBridge.install();
 
-            
             // Native Windows builds can hit JavaFX accessibility linkage issues.
             // Keep accessibility disabled unless explicitly forced by the user.
             System.setProperty("javafx.accessible.force", "false");
