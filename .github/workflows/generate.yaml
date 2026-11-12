@@ -33,7 +33,7 @@ jobs:
             artifact_name: ${{ steps.spotless.outputs.artifact_name }}
         steps:
             -   name: Harden Runner
-                uses: step-security/harden-runner@46b06cea07f9e64621fdf066ba77ac6915163d43 # v2.22.3
+                uses: step-security/harden-runner@1d88384fd173af6ecb012dfd0264a306b711241a # v2.22.4
                 with:
                     egress-policy: audit
 
@@ -47,7 +47,7 @@ jobs:
 
             -   name: Auto-Format Code
                 id: spotless
-                uses: TimSchoenle/actions/actions/java-gradle/auto-spotless@c13315fe3d8db7f1de82306a9d56b35c4fbf0fbb # tag=actions-java-gradle-auto-spotless-v2.0.2
+                uses: TimSchoenle/actions/actions/java-gradle/auto-spotless@6a49261c7bbd756b4ceca9b1c168dfc7dc095e64 # tag=actions-java-gradle-auto-spotless-v2.0.3
                 with:
                     java_version: '25'
                     artifact_name: auto-spotless
@@ -64,7 +64,7 @@ jobs:
             contents: read # to check out the commit the merged patch is made from
         steps:
             -   name: Harden Runner
-                uses: step-security/harden-runner@46b06cea07f9e64621fdf066ba77ac6915163d43 # v2.22.3
+                uses: step-security/harden-runner@1d88384fd173af6ecb012dfd0264a306b711241a # v2.22.4
                 with:
                     egress-policy: block
                     allowed-endpoints: >
@@ -74,6 +74,6 @@ jobs:
                         *.blob.core.windows.net:443
 
             -   name: Generated Files Verdict
-                uses: TimSchoenle/actions/actions/common/generated-files-verdict@927daf80ad493b627b7384abf496d83abbac5f43 # tag=actions-common-generated-files-verdict-v1.2.0
+                uses: TimSchoenle/actions/actions/common/generated-files-verdict@7c1147cf1e275c068a8484fa9a2dcb38a8b1f92f # tag=actions-common-generated-files-verdict-v1.2.3
                 with:
                     needs: ${{ toJSON(needs) }}
