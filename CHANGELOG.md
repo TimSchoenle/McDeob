@@ -1,5 +1,14 @@
 # Changelog
 
+## [2.12.16](https://github.com/TimSchoenle/McDeob/compare/v2.12.15...v2.12.16) (2026-11-12)
+
+
+### Dependencies
+
+* **deps:** update dependency com.diffplug.spotless to v8.11.0 ([#408](https://github.com/TimSchoenle/McDeob/issues/408)) ([96c5cd9](https://github.com/TimSchoenle/McDeob/commit/96c5cd9473d42708b508727c1f504dae8d43b7a9))
+* **deps:** update dependency com.fasterxml.jackson.core:jackson-databind to v2.23.0 ([#420](https://github.com/TimSchoenle/McDeob/issues/420)) ([a8598ad](https://github.com/TimSchoenle/McDeob/commit/a8598adbca1f55113de0119c63551d7ed180c009))
+* **deps:** update dependency io.freefair.lombok to v9.8.3 ([#402](https://github.com/TimSchoenle/McDeob/issues/402)) ([caa195d](https://github.com/TimSchoenle/McDeob/commit/caa195d4d75a625ad1f6ac4cfc7f47d4d3aa95f1))
+
 ## [2.12.15](https://github.com/TimSchoenle/McDeob/compare/v2.12.14...v2.12.15) (2026-10-28)
 
 
