@@ -1,5 +1,12 @@
 # Changelog
 
+## [2.12.17](https://github.com/TimSchoenle/McDeob/compare/v2.12.16...v2.12.17) (2026-11-12)
+
+
+### Build System
+
+* **gradle:** pin the Gradle wrapper distribution by checksum ([#423](https://github.com/TimSchoenle/McDeob/issues/423)) ([1ef6501](https://github.com/TimSchoenle/McDeob/commit/1ef65018c8c87460782852f1c4c51eef79f02187))
+
 ## [2.12.16](https://github.com/TimSchoenle/McDeob/compare/v2.12.15...v2.12.16) (2026-11-12)
 
 
