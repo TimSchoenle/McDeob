@@ -26,7 +26,7 @@ gluonfx = "1.0.29"
 foojay-resolver = "1.0.0"
 
 # build classpath only: replaces the end-of-life bcprov/bcpkix-jdk15on 1.49 pulled in by gluonfx (via substrate)
-bouncycastle = "1.86"
+bouncycastle = "1.87"
 
 [libraries]
 jackson-databind = { module = "com.fasterxml.jackson.core:jackson-databind", version.ref = "jacksonDatabind" }
