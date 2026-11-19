@@ -47,7 +47,7 @@ jobs:
 
             -   name: Auto-Format Code
                 id: spotless
-                uses: TimSchoenle/actions/actions/java-gradle/auto-spotless@0b3967d3d992d12aa88da1f8facf412b162d5ab2 # tag=actions-java-gradle-auto-spotless-v2.0.5
+                uses: TimSchoenle/actions/actions/java-gradle/auto-spotless@54a4dc05fd351a9bf9e9638fa3ebbc572b5f2d7f # tag=actions-java-gradle-auto-spotless-v2.0.6
                 with:
                     java_version: '25'
                     artifact_name: auto-spotless
@@ -74,6 +74,6 @@ jobs:
                         *.blob.core.windows.net:443
 
             -   name: Generated Files Verdict
-                uses: TimSchoenle/actions/actions/common/generated-files-verdict@0b3967d3d992d12aa88da1f8facf412b162d5ab2 # tag=actions-common-generated-files-verdict-v1.2.6
+                uses: TimSchoenle/actions/actions/common/generated-files-verdict@54a4dc05fd351a9bf9e9638fa3ebbc572b5f2d7f # tag=actions-common-generated-files-verdict-v1.2.7
                 with:
                     needs: ${{ toJSON(needs) }}
