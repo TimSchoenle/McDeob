@@ -1,5 +1,13 @@
 # Changelog
 
+## [2.12.18](https://github.com/TimSchoenle/McDeob/compare/v2.12.17...v2.12.18) (2026-11-28)
+
+
+### Dependencies
+
+* **deps:** update dependency com.diffplug.spotless to v8.12.0 ([#435](https://github.com/TimSchoenle/McDeob/issues/435)) ([ecb8c26](https://github.com/TimSchoenle/McDeob/commit/ecb8c26422154a74e2c512bbe7d0fc99ffae020c))
+* **deps:** update gradle to v9.9.2 ([#432](https://github.com/TimSchoenle/McDeob/issues/432)) ([c5f6417](https://github.com/TimSchoenle/McDeob/commit/c5f64179d72b2e38deada57a5d14fb5809463b4c))
+
 ## [2.12.17](https://github.com/TimSchoenle/McDeob/compare/v2.12.16...v2.12.17) (2026-11-18)
 
 
